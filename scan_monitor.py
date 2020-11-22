@@ -77,17 +77,18 @@ def status_loop():
         return int(scan_instance['scan']['id']) > 0
 
     # prime state with running or paused instances that have notification meta
-    scan_instances = tsc.scan_instances.list(fields=fields)['usable']
-    notification_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
-    scan_instances = filter(lambda meta: 'email' in meta, notification_meta)
-    state = {scan['id']: scan for scan in scan_instances}
+    # scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+    # notification_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
+    # scan_instances = filter(lambda meta: 'email' in meta, notification_meta)
+    # state = {scan['id']: scan for scan in scan_instances}
+    state = {}
 
     while True:
         # refresh state
         scan_instances = tsc.scan_instances.list(fields=fields)['usable']
         instances = {s['id']: s for s in scan_instances}
 
-        # remove state for any deleted scans
+        # remove saved state for any deleted scans
         assumed_deleted = set(state) - set(instances)
         for instance_id in assumed_deleted:
             del state[instance_id]
