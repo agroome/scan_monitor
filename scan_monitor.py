@@ -2,6 +2,7 @@ import re
 import smtplib
 import time
 from config import Config
+from daemon import DaemonContext
 from configparser import ConfigParser, MissingSectionHeaderError
 from tenable.sc import TenableSC
 
@@ -63,52 +64,62 @@ def send_notification(state_info):
 
 
 def status_loop():
-    tsc = TenableSC(Config.sc_host, port=Config.sc_port, access_key=Config.access_key, secret_key=Config.secret_key)
+
+    tsc = TenableSC(
+        host=Config.sc_host,
+        port=Config.sc_port,
+        access_key=Config.access_key,
+        secret_key=Config.secret_key)
 
     fields = ['id', 'name', 'description', 'status', 'scan']
-    scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+
+    def running_or_paused(scan_instance):
+        return int(scan_instance['scan']['id']) > 0
 
     # prime state with running or paused instances that have notification meta
-    notification_meta = (process_scan_meta(scan) for scan in scan_instances if int(scan['scan']['id']) > 0)
+    scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+    notification_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
     scan_instances = filter(lambda meta: 'email' in meta, notification_meta)
     state = {scan['id']: scan for scan in scan_instances}
 
     while True:
+        # refresh state
         scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+        instances = {s['id']: s for s in scan_instances}
 
-        instance_by_id = {s['id']: s for s in scan_instances}
-
-        assumed_deleted = set(state) - set(instance_by_id)
+        # remove state for any deleted scans
+        assumed_deleted = set(state) - set(instances)
         for instance_id in assumed_deleted:
             del state[instance_id]
 
-        no_saved_state = set(instance_by_id) - set(state)
+        # process any new instances
+        no_saved_state = set(instances) - set(state)
         for instance_id in no_saved_state:
-            instance = instance_by_id[instance_id]
-            if int(instance['scan']['id']) > 0:
+            instance = instances[instance_id]
+            if running_or_paused(instance):
                 state[instance_id] = process_scan_meta(instance)
                 state[instance_id]['status'] = 'STARTING'
 
-        # checks all saved states to see if new_state has changed
-        state_copy = state.copy()
-        for instance_id, last_state in state_copy.items():
-            new_state = process_scan_meta(instance_by_id.get(instance_id))
-
+        # update saved state for each instance
+        for instance_id, last_state in state.copy().items():
+            new_state = process_scan_meta(instances.get(instance_id))
             if new_state['status'] in intermediate_states or 'email' not in new_state:
                 continue
 
+            # report state change with email address in meta data
             if new_state['status'] != last_state['status']:
                 send_notification(new_state)
-                if new_state['status'] in end_states:
-                    del state[instance_id]
-                else:
+                if new_state['status'] not in end_states:
                     state[instance_id] = new_state
+                else:
+                    del state[instance_id]
 
         time.sleep(Config.poll_interval)
 
 
 if __name__ == '__main__':
-    status_loop()
+    with DaemonContext():
+        status_loop()
 
 
 # testing
