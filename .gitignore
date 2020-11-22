@@ -1,3 +1,6 @@
+#  app env
+.app_env
+
 # PyCharm files
 .idea/
 
