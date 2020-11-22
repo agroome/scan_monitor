@@ -2,7 +2,7 @@ import os
 from pathlib import Path  
 from dotenv import load_dotenv
 
-env_path = Path('.') / '.pyenv'
+env_path = Path('.') / '.app_env'
 load_dotenv(dotenv_path=env_path)
 
 DEFAULT_META_DELIMITER = '---+ do not delete this line .*'
