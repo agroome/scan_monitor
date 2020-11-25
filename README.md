@@ -18,7 +18,7 @@ Paste your API_KEYs into the documented location in install.sh. The run install.
 $ sudo chmod 755 ./install.sh
 $ sudo ./install.sh 
 ```
-
+## Usage
 Start the service with systemctl.
 ```shell script
 $ sudo systemctl start scan_monitor
