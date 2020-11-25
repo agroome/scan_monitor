@@ -1,9 +1,9 @@
 # scan_monitor
 
-Monitor and report on the status of Tenable.sc scanso
+Monitor and report on the status of Tenable.sc scans.
 
 *** This tool is not an officially supported Tenable project.                   
-*** Use of this tool is subject to the terms and conditions identified below,  
+*** Use of this tool is subject to the terms and conditions identified in the [LICENSE](https://github.com/agroome/scan_monitor/LICENSE) file,  
 *** and is not subject to any license agreement you may have with Tenable 
 
 ## Installation
