@@ -2,7 +2,6 @@ import re
 import smtplib
 import time
 from config import Config
-from daemon import DaemonContext
 from configparser import ConfigParser, MissingSectionHeaderError
 from tenable.sc import TenableSC
 
@@ -17,7 +16,7 @@ def process_scan_meta(scan):
     config_parser = ConfigParser(allow_no_value=True)
     notification_meta = dict()
 
-    expected_format_msg =  "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
+    expected_format_msg = "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
 
     # check for meta data in the description
     lines = scan['description'].split('\n')
@@ -41,7 +40,7 @@ def process_scan_meta(scan):
                     status=scan['status'],
                     email=email_addresses)
             else:
-                print(f'{scan["name"]}: missing email label in scan definitionmeta data . {expected_format_msg}')
+                print(f'{scan["name"]}: missing email label in scan definition meta data . {expected_format_msg}')
 
         except MissingSectionHeaderError:
             print(f'{scan["name"]}: missing meta data header in scan definition. {expected_format_msg}')
@@ -76,12 +75,11 @@ def status_loop():
     def running_or_paused(scan_instance):
         return int(scan_instance['scan']['id']) > 0
 
-    # prime state with running or paused instances that have notification meta
-    # scan_instances = tsc.scan_instances.list(fields=fields)['usable']
-    # notification_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
-    # scan_instances = filter(lambda meta: 'email' in meta, notification_meta)
-    # state = {scan['id']: scan for scan in scan_instances}
-    state = {}
+    # prime state with running or paused instances
+    scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+    scan_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
+    scan_instances = filter(lambda meta: 'email' in meta, scan_meta)
+    state = {scan['id']: scan for scan in scan_instances}
 
     while True:
         # refresh state
@@ -119,9 +117,6 @@ def status_loop():
 
 
 if __name__ == '__main__':
-    with DaemonContext():
-        status_loop()
+    status_loop()
 
 
-# testing
-# python -m smtpd -c DebuggingServer -n localhost:1025
