@@ -52,7 +52,7 @@ def send_notification(state_info):
     print('DEBUG: send notification')
     print(f'DEBUG: {state_info}')
 
-    smtp_server = '127.0.0.1'
+    smtp_server = Config.smtp_server
     from_addr = 'from@Address.com'
     to_addr = 'to@Address.com'
     text = f'Subject: {state_info["name"]} :: {state_info["status"]}\n\n{state_info["description"]}'

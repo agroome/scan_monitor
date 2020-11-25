@@ -4,18 +4,12 @@ Monitor and report on the status of Tenable.sc scans
 
 ## Installation
 
-Clone the environment to your local system and run to your local system.
 
 ```shell script
-# install python3-env
-$ sudo apt-get install python3-venv
-
-# clone the repository
-$ sudo git clone https://github.com/agroome/scan_monitor.git /opt/scan_monitor
-
-# create a virtual environment and install requirements
-$ python3 -m venv /opt/scan_monitor/venv
-
-$ source /opt/scan_monitor/venv/bin/activate
-(venv)$ pip install -r requirements.txt
+$ export ACCESS_KEY=[your access key]
+$ export SECRET_KEY=[your access key]
+$ sudo git clone https://github.com/agroome/scan_monitor /opt/scan_monitor
+$ cd /opt/scan_monitor
+$ sudo chmod 755 ./install.sh
+$ sudo ./install.sh 
 ```
