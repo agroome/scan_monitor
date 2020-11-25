@@ -33,8 +33,7 @@ Include the following at the end of a scan description to enable notifications f
 
 [notifications]
 
-email: 
-user1@example.com, user2@example.com, user3@example.com 
+email: user1@example.com, user2@example.com, user3@example.com 
 
 ```
 
