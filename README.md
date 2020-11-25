@@ -19,10 +19,10 @@ $ sudo chmod 755 ./install.sh
 $ sudo ./install.sh 
 ```
 ## Usage
-Start the service with systemctl.
+Enable and start the service with systemctl.
 ```shell script
+$ sudo systemctl enable scan_monitor
 $ sudo systemctl start scan_monitor
-
 ```
 
 Include the following at the end of a scan description to enable notifications for the scan.
