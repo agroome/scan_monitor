@@ -7,7 +7,7 @@ setuptools.setup(
     name="scan-monitor",
     version="0.0.1",
     author="Andy Groome",
-    author_email="agroome@tenable.com",
+    author_email="groome.andy@gmail.com",
     description="Monitor and scan status",
     long_description=long_description,
     long_description_content_type="text/markdown",
