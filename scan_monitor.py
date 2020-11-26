@@ -56,11 +56,13 @@ def send_notification(state_info):
     from_addr = 'from@Address.com'
     to_addr = 'to@Address.com'
     text = f'Subject: {state_info["name"]} :: {state_info["status"]}\n\n{state_info["description"]}'
-    with smtplib.SMTP(smtp_server, 1025) as server:
-        server.ehlo()
-        server.sendmail(from_addr, to_addr, text)
-        server.quit()
-
+    try:
+        with smtplib.SMTP(smtp_server, 1025) as server:
+            server.ehlo()
+            server.sendmail(from_addr, to_addr, text)
+            server.quit()
+    except Exception as e:
+        print(e.strerror)
 
 def status_loop():
 

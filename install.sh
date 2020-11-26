@@ -48,6 +48,3 @@ useradd --system scan_monitor
 chown scan_monitor:scan_monitor $APP_DIR/.app_env
 
 systemctl daemon-reload
-systemctl enable scan_monitor
-systemctl start scan_monitor
-
