@@ -1,3 +1,4 @@
+import logging
 import re
 import smtplib
 import time
@@ -13,6 +14,8 @@ end_states = ['Completed', 'Partial', 'Error']
 notification_states = ['Running', 'Paused'] + end_states
 
 cfg = Config()
+
+logging.basicConfig(filename='scan_monitor.log', level=logging.INFO)
 
 
 def process_scan_meta(scan):
@@ -53,8 +56,7 @@ def process_scan_meta(scan):
 
 
 def send_notification(state_info):
-    print('DEBUG: send notification')
-
+    """ Send email notification. """
     smtp_server = cfg.smtp_server
     smtp_port = cfg.smtp_port
     from_addr = 'from@Address.com'
@@ -65,11 +67,12 @@ def send_notification(state_info):
             server.ehlo()
             server.sendmail(from_addr, to_addr, text)
             server.quit()
-    except Exception as e:
-        print(e.strerror)
+    except ConnectionError as e:
+        logging.warning(f'Connection error: {e}.')
 
 
 def polling_loop():
+    logging.info('Scan monitor started')
 
     tsc = TenableSC(
         host=cfg.sc_host,
@@ -86,8 +89,7 @@ def polling_loop():
         # prime state with running or paused instances
         scan_instances = tsc.scan_instances.list(fields=fields)['usable']
     except Exception as e:
-        print(f'ERROR: {e}')
-        exit(1)
+        logging.warning(f'ERROR: {e}. Tenable.sc is not reachable.')
 
     scan_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
     scan_instances = filter(lambda meta: 'email' in meta, scan_meta)
@@ -98,7 +100,7 @@ def polling_loop():
         try:
             scan_instances = tsc.scan_instances.list(fields=fields)['usable']
         except Exception as e:
-            print(f"WARNING: {e.strerror}")
+            logging.warning(f'ERROR: {e}. Tenable.sc is not reachable.')
             continue
 
         instances = {s['id']: s for s in scan_instances}
