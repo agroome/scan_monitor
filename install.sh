@@ -12,12 +12,6 @@ fi
 # install scan_monitor into virtual env
 $APP_DIR/venv/bin/pip install -U .
 
-if [[ ! -d $APP_DIR/var/log ]]; then
-  /bin/mkdir -p $APP_DIR/var/log
-  /bin/chgrp scan_monitor $APP_DIR/var/log
-  /bin/chmod 775 $APP_DIR/var/log
-fi
-
 # setup systemd unit file
 if [[ ! -f /etc/systemd/system/scan_monitor.service ]]; then
     cat > /etc/systemd/system/scan_monitor.service <<EOF
@@ -41,6 +35,12 @@ fi
 if ! id scan_monitor > /dev/null 2>&1; then
   /bin/echo "creating scan_monitor user"
   /usr/sbin/useradd --system scan_monitor
+fi
+
+if [[ ! -d $APP_DIR/var/log ]]; then
+  /bin/mkdir -p $APP_DIR/var/log
+  /bin/chgrp scan_monitor $APP_DIR/var/log
+  /bin/chmod 775 $APP_DIR/var/log
 fi
 
 if [[ ! -f ${APP_DIR}/config.json ]]; then
