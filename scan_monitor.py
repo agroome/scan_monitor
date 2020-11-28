@@ -6,6 +6,8 @@ from config import Config
 from configparser import ConfigParser, MissingSectionHeaderError
 from tenable.sc import TenableSC
 
+LOG_FILE = '/opt/scan_monitor/var/log/scan_monitor.log'
+
 # delimiter that separates the description from the meta data
 delimiter_pattern = re.compile(Config.meta_delimiter)
 email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.+-]+')
@@ -15,7 +17,7 @@ notification_states = ['Running', 'Paused'] + end_states
 
 cfg = Config()
 
-logging.basicConfig(filename='scan_monitor.log', level=logging.INFO)
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
 
 
 def process_scan_meta(scan):
@@ -59,7 +61,7 @@ def send_notification(state_info):
     """ Send email notification. """
     smtp_server = cfg.smtp_server
     smtp_port = cfg.smtp_port
-    from_addr = 'from@Address.com'
+    from_addr = cfg.from_address
     to_addr = ', '.join(state_info['email'])
     text = f'Subject: {state_info["name"]} :: {state_info["status"]}\n\n{state_info["description"]}'
     try:

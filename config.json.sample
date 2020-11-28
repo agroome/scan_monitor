@@ -1,0 +1,10 @@
+{
+    "access_key": "5fd58650...",
+    "secret_key": "4f4a1866...",
+    "sc_host": "192.168.10.10",
+    "sc_port": 443,
+    "poll_interval": 15,
+    "smtp_server": "192.168.10.20",
+    "smtp_port": 25,
+    "from_address": "scanman@example.com"
+}

@@ -19,11 +19,11 @@ class Config:
     access_key = os.getenv('ACCESS_KEY')
     secret_key = os.getenv('SECRET_KEY')
     sc_host = os.getenv('SC_HOST')
-    sc_port = os.getenv('SC_PORT') and int(os.getenv('SC_PORT')) or 443
-    poll_interval = os.getenv('POLL_INTERVAL') and int(os.getenv('POLL_INTERVAL')) or 5
-    meta_delimiter = os.getenv('META_DELIMITER') or META_DELIMITER_REGEX
+    sc_port = int(os.getenv('SC_PORT', 443))
+    poll_interval = int(os.getenv('POLL_INTERVAL', 15))
+    meta_delimiter = os.getenv('META_DELIMITER', META_DELIMITER_REGEX)
     smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT') and int(os.getenv('SMTP_PORT')) or 25
+    smtp_port = int(os.getenv('SMTP_PORT', 25))
 
     def __init__(self, json_config=json_file):
         if os.path.exists(json_config):
@@ -34,10 +34,10 @@ class Config:
                 self.access_key = config.get('access_key', self.access_key)
                 self.secret_key = config.get('secret_key', self.secret_key)
                 self.sc_host = config.get('sc_host', self.sc_host)
-                self.sc_port = config.get('sc_port', self.sc_port)
-                self.poll_interval = config.get('poll_interval', self.poll_interval)
+                self.sc_port = int(config.get('sc_port', self.sc_port))
+                self.poll_interval = int(config.get('poll_interval', self.poll_interval))
                 self.meta_delimiter = config.get('meta_delimiter', self.meta_delimiter)
                 self.smtp_server = config.get('smtp_server', self.smtp_server)
-                self.smtp_port = config.get('smtp_port', self.smtp_port)
+                self.smtp_port = int(config.get('smtp_port', self.smtp_port))
 
 
