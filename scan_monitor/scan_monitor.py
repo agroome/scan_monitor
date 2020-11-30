@@ -18,12 +18,19 @@ cfg = Config()
 
 verbose = True
 
-logger = logging.getLogger()
-# logger.propagate = False
-handler = logging.StreamHandler()
+logger = logging.getLogger('scan_monitor')
+logger.propagate = False
+try:
+    from systemd.journal import JournalHandler
+    handler = JournalHandler()
+except:
+    handler = logging.StreamHandler()
+    pass
+
 handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
-handler.setLevel(logging.INFO)
+
 logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 def extract_scan_meta(scan):
@@ -115,6 +122,7 @@ def polling_loop():
     while True:
         # get a list of all scan instances, index by 'id' for processing
         try:
+            tsc = TenableSC(host=cfg.sc_host, port=cfg.sc_port, access_key=cfg.access_key, secret_key=cfg.secret_key)
             scan_instances = tsc.scan_instances.list(fields=fields)['usable']
             instances = {s['id']: s for s in scan_instances}
         except Exception as e:

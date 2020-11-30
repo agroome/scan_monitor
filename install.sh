@@ -7,15 +7,16 @@ fi
 
 APP_DIR=/opt/scan_monitor
 
-# create virtual env
-if [[ ! -d ${APP_DIR} ]]; then
-  /bin/echo "*** Installing libraries in ${APP_DIR}"
-  /usr/bin/apt install -y python3-venv
-  python3 -m venv ${APP_DIR}
+# create virtual environment in APP_DIR
+if [[ ! -d "$APP_DIR" ]]; then
+  /bin/echo "*** Installing libraries in $APP_DIR"
+  /usr/bin/apt install -y python3-venv python3-systemd
+  python3 -m venv "$APP_DIR"
 fi
 
 # install scan_monitor into virtual env
-$APP_DIR/bin/pip install -U .
+SRC_DIR=$(dirname "$0")
+$APP_DIR/bin/pip install -U "$SRC_DIR"
 
 # setup systemd unit file
 if [[ ! -f /etc/systemd/system/scan_monitor.service ]]; then
@@ -43,18 +44,18 @@ if ! id scan_monitor > /dev/null 2>&1; then
 fi
 
 # setup folders and config file
-if [[ ! -d ${APP_DIR}/etc ]]; then
-  /bin/mkdir ${APP_DIR}/etc
-  /bin/cp config.json.sample ${APP_DIR}/etc/config.json
+if [[ ! -d "$APP_DIR"/etc ]]; then
+  /bin/mkdir -p "$APP_DIR"/etc
+  /bin/cp "$SRC_DIR"/config.json.sample "$APP_DIR"/etc/config.json
 fi
 
 # set ownership and ensure read permsisions are restricted on config.json
-/bin/chown scan_monitor:scan_monitor -R $APP_DIR
-/bin/chmod 400 ${APP_DIR}/etc/config.json
+/bin/chown scan_monitor:scan_monitor -R "$APP_DIR"
+/bin/chmod 400 "$APP_DIR"/etc/config.json
 
 /bin/echo "###  Installation complete. "
 /bin/echo "### "
-/bin/echo "###  Edit the values in /opt/scan_monitor/config.json suit your environment. You will need: "
+/bin/echo "###  Edit the values in /opt/scan_monitor/etc/config.json suit your environment. You will need: "
 /bin/echo "###    - Tenable.sc API key pair "
 /bin/echo "###    - Tenable.sc IP address or hostname and port "
 /bin/echo "###    - SMTP ServerTenable.sc IP address or hostname and port "
