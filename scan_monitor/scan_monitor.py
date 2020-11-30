@@ -2,11 +2,10 @@ import logging
 import re
 import smtplib
 import time
-from config import Config
+from scan_monitor.config import Config
 from configparser import ConfigParser, MissingSectionHeaderError
+from tenable.errors import ConnectionError
 from tenable.sc import TenableSC
-
-LOG_FILE = '/opt/scan_monitor/var/log/scan_monitor.log'
 
 # delimiter that separates the description from the meta data
 delimiter_pattern = re.compile(Config.meta_delimiter)
@@ -17,15 +16,22 @@ notification_states = ['Running', 'Paused'] + end_states
 
 cfg = Config()
 
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO)
+verbose = True
+
+logger = logging.getLogger()
+# logger.propagate = False
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 
-def process_scan_meta(scan):
+def extract_scan_meta(scan):
     """ Parse an item from the list of scan instances. Return meta-data if found in the scan description. """
     config_parser = ConfigParser(allow_no_value=True)
     notification_meta = dict()
 
-    expected_format_msg = "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
+    meta_format_msg = "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
 
     # check for meta data in the description
     lines = scan['description'].split('\n')
@@ -35,7 +41,7 @@ def process_scan_meta(scan):
 
     # parse lines following the meta_delimiter. if found, create dictionary of config values
     description_lines = lines[:line_number]
-    config_lines = lines[line_number+1:]
+    config_lines = lines[line_number + 1:]
     if config_lines:
         try:
             config_parser.read_string('\n'.join(config_lines))
@@ -49,10 +55,10 @@ def process_scan_meta(scan):
                     status=scan['status'],
                     email=email_addresses)
             else:
-                print(f'{scan["name"]}: missing email label in scan definition meta data . {expected_format_msg}')
+                logger.warning(f'{scan["name"]}: missing email label in scan definition meta data . {meta_format_msg}')
 
         except MissingSectionHeaderError:
-            print(f'{scan["name"]}: missing meta data header in scan definition. {expected_format_msg}')
+            print(f'{scan["name"]}: missing meta data header in scan definition. {meta_format_msg}')
 
     return notification_meta
 
@@ -64,48 +70,56 @@ def send_notification(state_info):
     from_addr = cfg.from_address
     to_addr = ', '.join(state_info['email'])
     text = f'Subject: {state_info["name"]} :: {state_info["status"]}\n\n{state_info["description"]}'
+    logger.info(f'NOTIFY: {state_info["name"]} :: {state_info["status"]}')
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.ehlo()
             server.sendmail(from_addr, to_addr, text)
             server.quit()
-    except ConnectionError as e:
-        logging.warning(f'Connection error: {e}.')
+    except Exception as e:
+        logger.warning(f'SMTP Server [{smtp_server}:{smtp_port}]: {e}.')
+        pass
+
+
+def running_or_paused(scan_instance):
+    return int(scan_instance['scan']['id']) > 0
+
+
+def prime_initial_state(tsc, fields):
+    logger.info(f'prime initial state')
+    # extract meta data from running or paused scan instances
+    scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+    active_instance_meta = (extract_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
+    notification_instances = filter(lambda meta: 'email' in meta, active_instance_meta)
+    initial_state = {scan['id']: scan for scan in notification_instances}
+    logger.info(f'initial state: {initial_state}')
+    return initial_state
 
 
 def polling_loop():
-    logging.info('Scan monitor started')
-
-    tsc = TenableSC(
-        host=cfg.sc_host,
-        port=cfg.sc_port,
-        access_key=cfg.access_key,
-        secret_key=cfg.secret_key)
+    logger.info(f'Scan monitor started for {cfg.sc_host}')
+    try:
+        tsc = TenableSC(host=cfg.sc_host, port=cfg.sc_port, access_key=cfg.access_key, secret_key=cfg.secret_key)
+    except Exception as e:
+        logger.error(f'Tenable.sc API must be reachable during startup: {e}')
+        exit(1)
 
     fields = ['id', 'name', 'description', 'status', 'scan']
 
-    def running_or_paused(scan_instance):
-        return int(scan_instance['scan']['id']) > 0
-
     try:
-        # prime state with running or paused instances
-        scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+        state = prime_initial_state(tsc, fields)
     except Exception as e:
-        logging.warning(f'ERROR: {e}. Tenable.sc is not reachable.')
-
-    scan_meta = (process_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
-    scan_instances = filter(lambda meta: 'email' in meta, scan_meta)
-    state = {scan['id']: scan for scan in scan_instances}
+        logger.error(f'Tenable.sc must be reachable during startup: {e}')
+        exit(1)
 
     while True:
         # get a list of all scan instances, index by 'id' for processing
         try:
             scan_instances = tsc.scan_instances.list(fields=fields)['usable']
+            instances = {s['id']: s for s in scan_instances}
         except Exception as e:
-            logging.warning(f'ERROR: {e}. Tenable.sc is not reachable.')
+            logger.warning(f'Tenable.sc is not reachable: {e}')
             continue
-
-        instances = {s['id']: s for s in scan_instances}
 
         # remove saved state for any deleted scans
         assumed_deleted = set(state) - set(instances)
@@ -117,28 +131,25 @@ def polling_loop():
         for instance_id in no_saved_state:
             instance = instances[instance_id]
             if running_or_paused(instance):
-                state[instance_id] = process_scan_meta(instance)
+                state[instance_id] = extract_scan_meta(instance)
                 state[instance_id]['status'] = 'STARTING'
 
         # update saved state for each instance
         for instance_id, last_state in state.copy().items():
 
-            new_state = process_scan_meta(instances.get(instance_id))
-            if new_state['status'] not in notification_states or 'email' not in new_state:
+            instance_meta = extract_scan_meta(instances.get(instance_id))
+            if instance_meta['status'] not in notification_states or 'email' not in instance_meta:
                 continue
 
             # report state change and update or delete saved state
-            if new_state['status'] != last_state['status']:
-                send_notification(new_state)
-                if new_state['status'] not in end_states:
-                    state[instance_id] = new_state
+            if instance_meta['status'] != last_state['status']:
+                send_notification(instance_meta)
+                if instance_meta['status'] not in end_states:
+                    state[instance_id] = instance_meta
                 else:
                     del state[instance_id]
 
         time.sleep(cfg.poll_interval)
 
-
-if __name__ == '__main__':
-    polling_loop()
-
-
+# if __name__ == '__main__':
+#     polling_loop()
