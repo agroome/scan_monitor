@@ -7,10 +7,11 @@ fi
 
 APP_DIR=/opt/scan_monitor
 
+/usr/bin/apt install -y python3-venv python3-systemd
+
 # create virtual environment in APP_DIR
 if [[ ! -d "$APP_DIR" ]]; then
   /bin/echo "*** Installing libraries in $APP_DIR"
-  /usr/bin/apt install -y python3-venv python3-systemd
   python3 -m venv "$APP_DIR"
 fi
 
