@@ -21,13 +21,13 @@ email: user1@example.com, user2@example.com, user3@example.com
 
 Clone the repository into /opt/scan_monitor:
 ```
-$ sudo git clone https://github.com/agroome/scan_monitor /opt/scan_monitor
-$ cd /opt/scan_monitor
+sudo git clone https://github.com/agroome/scan_monitor /opt/scan_monitor
+cd /opt/scan_monitor
 ```
 Set the permissions, then run install.sh:
-```shell script
-$ sudo chmod 755 ./install.sh
-$ sudo ./install.sh 
+```
+sudo chmod 755 ./install.sh
+sudo ./install.sh 
 ```
 ## Usage
 Enable and start the service with systemctl.
