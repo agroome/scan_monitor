@@ -20,7 +20,7 @@ email: user1@example.com, user2@example.com, user3@example.com
 ## Installation
 
 Clone the repository into /opt/scan_monitor:
-```shell script
+```
 $ sudo git clone https://github.com/agroome/scan_monitor /opt/scan_monitor
 $ cd /opt/scan_monitor
 ```
