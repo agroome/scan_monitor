@@ -19,7 +19,7 @@ email: user1@example.com, user2@example.com, user3@example.com
 
 ## Installation
 
-#### Step One: Create an account on Tenable.sc, generate API keys
+### Step One: Create an account on Tenable.sc, generate API keys
 1. Ensure API Keys are enabled
 
     - Login as admin
@@ -62,7 +62,7 @@ email: user1@example.com, user2@example.com, user3@example.com
     
     - Select Generate API Keys
 
-#### Step Two: Install and configure scan_monitor 
+### Step Two: Install and configure scan_monitor 
 Clone the scan_monitor repository and run the install script:
 ```
 git clone https://github.com/agroome/scan_monitor 
