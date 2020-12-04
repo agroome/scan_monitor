@@ -58,13 +58,12 @@ description. See configuration details below.
     - Select Generate API Keys
 
 ### Step Two: Install and configure scan_monitor 
-Clone the scan_monitor repository and run the install script:
+1. On the monitoring server, clone the scan_monitor repository and run the install script:
 ```
 git clone https://github.com/agroome/scan_monitor 
 sudo ./scan_monitor/install.sh
 ```
-
-Edit /opt/scan_monitor/etc/config.json
+2. Edit /opt/scan_monitor/etc/config.json (poll_interval in seconds)
 ```javascript
 {
     "access_key": "5fd58650...",
@@ -78,7 +77,7 @@ Edit /opt/scan_monitor/etc/config.json
 }
 ```
 
-### Step Three: Configure notifications for each scan
+### Step Three: Configure notifications for one or more scans on Tenable.sc
 Include the following at the end of a scan description to enable notifications for the scan.
 
 ```
