@@ -5,13 +5,8 @@ email to a list of users when a scan instance changes to one of the following st
  'Running', 'Paused', 'Completed', 'Partial', or 'Error'.
  
 Email recipients are defined in a meta-data section that can be appended to the bottom of the scan 
-description. Meta-data in the following format will be recognized:
+description. See configuration details below.
 
-```
---- do not delete below this line ---
-[notifications]
-email: user1@example.com, user2@example.com, user3@example.com 
-```
 
 *** This tool is not an officially supported Tenable project.                   
 *** Use of this tool is subject to the terms and conditions identified in the [LICENSE](LICENSE) file,  
@@ -83,15 +78,21 @@ Edit /opt/scan_monitor/etc/config.json
 }
 ```
 
+### Step Three: Configure notifications for each scan
+Include the following at the end of a scan description to enable notifications for the scan.
+
+```
+--- do not delete below this line ---
+[notifications]
+email: user1@example.com, user2@example.com, user3@example.com 
+```
+
 ## Usage
 Enable and start the service with systemctl.
 ```
 sudo systemctl enable scan_monitor
 sudo systemctl start scan_monitor
 ```
-
-Include the following at the end of a scan description to enable notifications for the scan.
-
 
 ## Diagnostics
 Confirm the service is running. 
