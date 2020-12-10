@@ -34,6 +34,8 @@ scan_monitor polls the Tenable.sc API to provide enhanced email notification cap
 
 - [Configure email notifications](#configure-email-notifications)
 
+- [Customize email template](#configure-email-notifications)
+
 
 ### Enable API keys on Tenable.sc
 
@@ -119,6 +121,65 @@ Include the following at the end of a Tenable.sc scan description to enable noti
 [notifications]
 email: user1@example.com, user2@example.com, user3@example.com 
 ```
+
+### Customize notification template
+The following scan instance variables can be used in the notification templates:
+```
+instance_variables = [
+    'id', 'name', 'description', 'status', 'initiator', 'owner', 'ownerGroup',
+    'repository', 'scan', 'job', 'details', 'importStatus', 'importStart', 'importFinish',
+    'initiator', 'owner', 'ownerGroup', 'repository', 'scan', 'job', 'details', 'importStatus',
+    'importStart', 'importFinish', 'importDuration', 'downloadAvailable', 'resultType', 'resultSource',
+    'running', 'errorDetails', 'importErrorDetails', 'totalIPs', 'scannedIPs', 'startTime', 'finishTime',
+    'scanDuration, completedIPs', 'completedChecks', 'totalChecks', 'agentScanUUID', 'agentScanContainerUUID',
+]
+```
+
+Default template using some of the variables:
+```
+{{ name }}
+details: {{ details }}
+
+targets:
+    scanned IPs: {{ scannedIPs }}
+    total IPs:   {{ totalIPs }}
+
+checks:
+    completed:  {{ completedChecks }}
+    total:      {{ totalChecks }}
+
+Scan {{ status }}.
+{%- if status != 'Completed' %}
+    {{ errorDetails }}
+{% endif %}
+Import {{ importStatus }}.
+{%- if importStatus != 'Completed' %}
+    {{ importErrorDetails }}
+{% endif %}
+```
+Following is example output using the above template. The license happened to expire during the scan resulting 
+in a completed (Partial) scan which was blocked on import due to the expired license. This was all reflected in the 
+notification.
+```
+RTP Office - Discovery
+details: Discovery scan designed to test a roll-over scan.
+
+targets:
+    scanned IPs: 1
+    total IPs:   256
+
+checks:
+    completed:  123804
+    total:      31693824
+
+Scan Partial.
+    The Scan was stopped, partial results imported, and a rollover Scan template created for the remaining IPs.
+
+Import Blocked.
+    Scan import error. License invalid: status 65.
+```
+
+Read about Jinja templates here: [Jinja2 docs](https://jinja2docs.readthedocs.io/)
 
 ### File locations
  - /opt/scan_monitor/var/log/notify.log
