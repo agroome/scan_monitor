@@ -66,7 +66,7 @@ fi
 
 /bin/echo "###  Installation complete. "
 /bin/echo "### "
-/bin/echo "###  Edit the values in /opt/scan_monitor/etc/config.json suit your environment. You will need: "
+/bin/echo "###  Edit the values in /opt/scan_monitor/etc/config.json to suit your environment. You will need: "
 /bin/echo "###    - Tenable.sc API key pair "
 /bin/echo "###    - Tenable.sc IP address or hostname and port "
 /bin/echo "###    - SMTP ServerTenable.sc IP address or hostname and port "
