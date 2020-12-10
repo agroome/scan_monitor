@@ -2,9 +2,8 @@ import logging
 import re
 import smtplib
 import time
-from scan_monitor.config import Config
+from .config import Config
 from configparser import ConfigParser, MissingSectionHeaderError
-from tenable.errors import ConnectionError
 from tenable.sc import TenableSC
 
 # delimiter that separates the description from the meta data
@@ -20,6 +19,7 @@ verbose = True
 
 logger = logging.getLogger('scan_monitor')
 logger.propagate = False
+
 try:
     from systemd.journal import JournalHandler
     handler = JournalHandler()
@@ -96,27 +96,22 @@ def prime_initial_state(tsc, fields):
     logger.info(f'prime initial state')
     # extract meta data from running or paused scan instances
     scan_instances = tsc.scan_instances.list(fields=fields)['usable']
-    active_instance_meta = (extract_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
-    notification_instances = filter(lambda meta: 'email' in meta, active_instance_meta)
+    scan_meta = (extract_scan_meta(scan) for scan in scan_instances if running_or_paused(scan))
+
+    notification_instances = filter(lambda meta: 'email' in meta, scan_meta)
     initial_state = {scan['id']: scan for scan in notification_instances}
     logger.info(f'initial state: {initial_state}')
     return initial_state
 
 
-def polling_loop():
+def start_monitor():
     logger.info(f'Scan monitor started for {cfg.sc_host}')
+    fields = ['id', 'name', 'description', 'status', 'scan']
     try:
         tsc = TenableSC(host=cfg.sc_host, port=cfg.sc_port, access_key=cfg.access_key, secret_key=cfg.secret_key)
-    except Exception as e:
-        logger.error(f'Tenable.sc API must be reachable during startup: {e}')
-        exit(1)
-
-    fields = ['id', 'name', 'description', 'status', 'scan']
-
-    try:
         state = prime_initial_state(tsc, fields)
     except Exception as e:
-        logger.error(f'Tenable.sc must be reachable during startup: {e}')
+        logger.error(f'Tenable.sc API must be reachable during startup: {e}')
         exit(1)
 
     while True:
@@ -160,4 +155,4 @@ def polling_loop():
         time.sleep(cfg.poll_interval)
 
 # if __name__ == '__main__':
-#     polling_loop()
+#     start_monitor()
