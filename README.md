@@ -68,7 +68,7 @@ Switch to an account with Security Manager privileges for the next steps.
     
     - Click on Add User
     
-    - Add the 
+    - Add the user to:
         - Full Access Group 
         
         - The role created in step (2)
@@ -157,7 +157,7 @@ Import {{ importStatus }}.
     {{ importErrorDetails }}
 {% endif %}
 ```
-Following is example output using the above template. The license happened to expire during the scan resulting 
+The following is example of output using the above template. The license happened to expire during the scan resulting 
 in a completed (Partial) scan which was blocked on import due to the expired license. This was all reflected in the 
 notification.
 ```
@@ -184,5 +184,9 @@ Read about Jinja templates here: [Jinja2 docs](https://jinja2docs.readthedocs.io
 ### File locations
  - /opt/scan_monitor/var/log/notify.log
  - /opt/scan_monitor/etc/config.json
+
+### License
+The project is licensed under the MIT license.
+
 
 
