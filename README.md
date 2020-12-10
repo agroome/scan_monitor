@@ -157,7 +157,7 @@ Import {{ importStatus }}.
     {{ importErrorDetails }}
 {% endif %}
 ```
-Following is example output using the above template. The license happened to expire during the scan resulting 
+The following is example of output using the above template. The license happened to expire during the scan resulting 
 in a completed (Partial) scan which was blocked on import due to the expired license. This was all reflected in the 
 notification.
 ```
