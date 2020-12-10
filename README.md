@@ -185,4 +185,8 @@ Read about Jinja templates here: [Jinja2 docs](https://jinja2docs.readthedocs.io
  - /opt/scan_monitor/var/log/notify.log
  - /opt/scan_monitor/etc/config.json
 
+### License
+The project is licensed under the MIT license.
+
+
 
