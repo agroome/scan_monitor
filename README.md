@@ -1,76 +1,89 @@
 # scan_monitor
-[Link text](#installation)
 
-[Step One](#step-one-create-an-account-on-tenablesc-generate-api-keys)
+Monitor and report on the status of Tenable.sc scans. 
 
-[Step Two](#step-two-install-and-configure-scan_monitor)
-
-
-Monitor and report on the status of Tenable.sc scans. scan_monitor polls the Tenable.sc API and send a notification
-email to a list of users when a scan instance changes to one of the following states: 
- 'Running', 'Paused', 'Completed', 'Partial', or 'Error'.
+scan_monitor polls the Tenable.sc API and sends an email notification
+to a defined list of users when a scan instance changes into one of the following states: 
+ - 'Running': A scan has started running
+ - 'Paused': A scan has paused 
+ - 'Completed': A scan has completed
+ - 'Partial': A scan has completed with partial results
+ - 'Error': An error has completing or importing the scan
  
-Email recipients are defined in a meta-data section that can be appended to the bottom of the scan 
-description. See configuration details below.
+
+> This tool is NOT officially supported Tenable software. Use of this tool is subject to the terms and conditions 
+> identified in the [LICENSE](LICENSE),  and is not subject to any license agreement you may have with Tenable.
+
+## Getting Started
+
+[Enable API keys on Tenable.sc](#enable-api-keys-on-tenablesc)
+
+[Create a service account](#create-a-service-account)
+
+[Generate API Keys](#generate-api-keys)
+
+[Install and configure scan_monitor](#install-and-configure-scan_monitor)
+
+[Configure email notifications](#configure-email-notifications)
 
 
-*** This tool is not an officially supported Tenable project.                   
-*** Use of this tool is subject to the terms and conditions identified in the [LICENSE](LICENSE) file,  
-*** and is not subject to any license agreement you may have with Tenable 
+#### Enable API keys on Tenable.sc
 
-## Installation
+Complete this step as the Admin user.
 
+- Ensure API Keys are enabled
 
-### Step One: Create an account on Tenable.sc, generate API keys
-1. Ensure API Keys are enabled
-
-    - Login as admin
-    
     - Go to (System / Configuration / Security)
     
     - Check the box for 'Allow API keys'
-    
-2. Create a new role with no permissions enabled 
+   
+#### Create a service account
+Switch to an account with Security Manager privileges for the next steps.
 
-    - Login as Security Manager 
+- Create a new role with no permissions enabled 
 
     - Go to (Users / Roles)
     
     - Click on Add Role
     
-    - Turn off all of the permissions
-    
     - Name the role, i.e. "Monitor"
     
-3. Create an account limited to the restricted role
-
-    - As Security Manager
+    - Turn off all of the permissions, ensure all boxes are unchecked
     
+    - Click Submit
+    
+- Create an account limited to the restricted role
+
     - Go to (Users)
     
     - Click on Add User
     
-    - In the Membership Section, select the Full Access Group and the new Role
+    - Add the 
+        - Full Access Group 
+        
+        - The role created in step (2)
     
-    - Save the user
+    - Click Submit
     
-4. Generate API Keys for the user
+    
+#### Generate API Keys
+Also using a Security Manager account.
+ - Go to (Users)
+    
+ - Click the Gear on right side of the user list
+    
+ - Select Generate API Keys
+    
+ - Record the keys to a secure file or keep this window open for the next step
 
-    - As Security Manager
-    
-    - Go to (Users)
-    
-    - Click the Gear on right side of the user list
-    
-    - Select Generate API Keys
-
-### Step Two: Install and configure scan_monitor 
-1. On the monitoring server, clone the scan_monitor repository and run the install script:
+#### Install and configure scan_monitor
+Clone the repository, then run install.sh
 ```
 git clone https://github.com/agroome/scan_monitor 
 sudo ./scan_monitor/install.sh
 ```
-2. Edit /opt/scan_monitor/etc/config.json (poll_interval in seconds)
+
+Edit /opt/scan_monitor/etc/config.json (poll_interval in seconds)
 ```javascript
 {
     "access_key": "5fd58650...",
@@ -84,8 +97,14 @@ sudo ./scan_monitor/install.sh
 }
 ```
 
-### Step Three: Configure notifications for one or more scans on Tenable.sc
-Include the following at the end of a scan description to enable notifications for the scan.
+#### Start the scan_monitor service
+Control the service with systemctl. For example:
+```
+sudo systemctl start scan_monitor.service
+```
+
+#### Configure email notifications 
+Include the following at the end of a Tenable.sc scan description to enable notifications for the scan.
 
 ```
 --- do not delete below this line ---
@@ -93,20 +112,8 @@ Include the following at the end of a scan description to enable notifications f
 email: user1@example.com, user2@example.com, user3@example.com 
 ```
 
-## Usage
-Enable and start the service with systemctl.
-```
-sudo systemctl enable scan_monitor
-sudo systemctl start scan_monitor
-```
+#### File locations
+ - /opt/scan_monitor/var/log/notify.log
+ - /opt/scan_monitor/etc/config.json
 
-## Diagnostics
-Confirm the service is running. 
-```commandline
-systemctl status scan_monitor
-```
-Start the service manually (see Usage). If you are not able to start the service, run journalctl to see any errors logged by systemd. 
-```commandline
-sudo /bin/journalctl -u scan_monitor
-```
 
