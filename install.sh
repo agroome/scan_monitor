@@ -6,17 +6,23 @@ if [ "$EUID" -ne 0 ]
 fi
 
 APP_DIR=/opt/scan_monitor
+SRC_DIR=$(dirname "$0")
+
 
 /usr/bin/apt install -y python3-venv python3-systemd
 
 # create virtual environment in APP_DIR
 if [[ ! -d "$APP_DIR" ]]; then
-  /bin/echo "*** Installing libraries in $APP_DIR"
+  /bin/echo "*** Installing virtual environment in $APP_DIR"
   python3 -m venv "$APP_DIR"
 fi
 
+if [[ ! -d "$APP_DIR/templates" ]]; then
+    /bin/echo "*** copying templates $APP_DIR"
+    /bin/cp -r "$SRC_DIR/scan_monitor/templates" "$APP_DIR"
+fi
+
 # install scan_monitor into virtual env
-SRC_DIR=$(dirname "$0")
 $APP_DIR/bin/pip install -U "$SRC_DIR"
 
 # setup systemd unit file
@@ -48,6 +54,10 @@ fi
 if [[ ! -d "$APP_DIR"/etc ]]; then
   /bin/mkdir -p "$APP_DIR"/etc
   /bin/cp "$SRC_DIR"/config.json.sample "$APP_DIR"/etc/config.json
+fi
+# create log directory
+if [[ ! -d "$APP_DIR"/var/log ]]; then
+  /bin/mkdir -p "$APP_DIR"/var/log
 fi
 
 # set ownership and ensure read permsisions are restricted on config.json
