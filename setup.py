@@ -13,10 +13,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/agroome/scan_monitor",
     packages=["scan_monitor"],
-    install_requires=["python-systemd", "python-dotenv", "pytenable"],
+    install_requires=["jinja2", "python-systemd", "python-dotenv", "pytenable"],
     entry_points={
         "console_scripts": [
-            "scan_monitor = scan_monitor.scan_monitor:polling_loop"
+            "scan_monitor = scan_monitor.app:start_monitor"
         ]
     },
     classifiers=[

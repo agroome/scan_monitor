@@ -1,27 +1,29 @@
+import logging
 import re
+import smtplib
 from configparser import ConfigParser, MissingSectionHeaderError
-from .config import Config
+from scan_monitor import config
 
 # delimiter that separates the description from the meta data
-delimiter_pattern = re.compile(Config.meta_delimiter)
+delimiter_pattern = re.compile(config.meta_delimiter)
 email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.+-]+')
 
 
-def send_notification(state_info):
+def send_notification(cfg, notification):
     """ Send email notification. """
     smtp_server = cfg.smtp_server
     smtp_port = cfg.smtp_port
     from_addr = cfg.from_address
-    to_addr = ', '.join(state_info['email'])
-    text = f'Subject: {state_info["name"]} :: {state_info["status"]}\n\n{state_info["description"]}'
-    logger.info(f'NOTIFY: {state_info["name"]} :: {state_info["status"]}')
+    to_addr = ', '.join(notification['email'])
+    text = f'Subject: {notification["name"]} :: {notification["status"]}\n\n{notification["description"]}'
+    logging.info(f'NOTIFY: {notification["name"]} :: {notification["status"]}')
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.ehlo()
             server.sendmail(from_addr, to_addr, text)
             server.quit()
     except Exception as e:
-        logger.warning(f'SMTP Server [{smtp_server}:{smtp_port}]: {e}.')
+        logging.warning(f'SMTP Server [{smtp_server}:{smtp_port}]: {e}.')
         pass
 
 
@@ -30,7 +32,7 @@ def extract_scan_meta(scan):
     config_parser = ConfigParser(allow_no_value=True)
     notification_meta = dict()
 
-    meta_format_msg = "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
+    format_msg = "Expecting:\n[notifications]\nemail: name@example.com, user@xample.com\n"
 
     # check for meta data in the description
     lines = scan['description'].split('\n')
@@ -54,10 +56,10 @@ def extract_scan_meta(scan):
                     status=scan['status'],
                     email=email_addresses)
             else:
-                logger.warning(f'{scan["name"]}: missing email label in scan definition meta data . {meta_format_msg}')
+                logging.warning('%s: missing email label in scan definition meta data. %s', scan["name"], format_msg)
 
         except MissingSectionHeaderError:
-            print(f'{scan["name"]}: missing meta data header in scan definition. {meta_format_msg}')
+            print('%s: missing meta data header in scan definition. %s', scan["name"], format_msg)
 
     return notification_meta
 
