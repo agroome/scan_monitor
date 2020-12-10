@@ -3,7 +3,7 @@ import logging
 import time
 from tenable.sc import TenableSC
 from scan_monitor import config
-from scan_monitor.util import extract_scan_meta
+from scan_monitor.util import extract_scan_meta, send_notification
 
 template = config.jinja_env.get_template('notification.j2')
 
@@ -47,9 +47,11 @@ def process_instances(scan_instances, saved_state=None):
             instance = new_state[instance_id]
             if instance['status'] in notification_states:
                 notification_meta = extract_scan_meta(instance)
-                logging.info('email = %s', notification_meta.get('email', 'UNKNOWN'))
-                transition = f'NEW ==> {instance["status"]}'
-                logging.info(transition)
+                if notification_meta:
+                    logging.info('email = %s', notification_meta.get('email', 'UNKNOWN'))
+                    transition = f'NEW ==> {instance["status"]}'
+                    send_notification(config, notification_meta, instance)
+                    logging.info(transition)
 
         # review instances in saved_state for status changes
         for instance_id, saved_instance in saved_state.items():
@@ -62,7 +64,9 @@ def process_instances(scan_instances, saved_state=None):
                 transition = f'{saved_instance["status"]} ==> {instance["status"]}'
                 logging.info(transition)
                 notification_meta = extract_scan_meta(instance)
-                logging.info('email = %s', notification_meta.get('email', 'UNKNOWN'))
+                if notification_meta:
+                    send_notification(config, notification_meta, instance)
+                    logging.info('email = %s', notification_meta.get('email', 'UNKNOWN'))
 
             # maintain state with the latest meta data
             if instance['status'] not in end_states:
