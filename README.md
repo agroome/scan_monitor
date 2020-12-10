@@ -1,4 +1,10 @@
 # scan_monitor
+[Link text](#installation)
+
+[Step One](#step-one-create-an-account-on-tenablesc-generate-api-keys)
+
+[Step Two](#step-two-install-and-configure-scan_monitor)
+
 
 Monitor and report on the status of Tenable.sc scans. scan_monitor polls the Tenable.sc API and send a notification
 email to a list of users when a scan instance changes to one of the following states: 
@@ -13,6 +19,7 @@ description. See configuration details below.
 *** and is not subject to any license agreement you may have with Tenable 
 
 ## Installation
+
 
 ### Step One: Create an account on Tenable.sc, generate API keys
 1. Ensure API Keys are enabled

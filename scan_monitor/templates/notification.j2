@@ -1,0 +1,19 @@
+{{ name }}
+details: {{ details }}
+
+targets:
+    scanned IPs: {{ scannedIPs }}
+    total IPs:   {{ totalIPs }}
+
+checks:
+    completed:  {{ completedChecks }}
+    total:      {{ totalChecks }}
+
+Scan {{ status }}.
+{%- if status != 'Completed' %}
+    {{ errorDetails }}
+{% endif %}
+Import {{ importStatus }}.
+{%- if importStatus != 'Completed' %}
+    {{ importErrorDetails }}
+{% endif %}
