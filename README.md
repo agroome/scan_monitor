@@ -68,7 +68,7 @@ Switch to an account with Security Manager privileges for the next steps.
     
     - Click on Add User
     
-    - Add the 
+    - Add the user to:
         - Full Access Group 
         
         - The role created in step (2)
