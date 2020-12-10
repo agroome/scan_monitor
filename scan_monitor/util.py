@@ -1,6 +1,5 @@
 import logging
 import re
-import smtplib
 from configparser import ConfigParser, MissingSectionHeaderError
 from scan_monitor import config
 
@@ -9,27 +8,6 @@ template = config.jinja_env.get_template('notification.j2')
 # delimiter that separates the description from the meta data
 delimiter_pattern = re.compile(config.meta_delimiter)
 email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.+-]+')
-
-
-def send_notification(cfg, notification, instance_data):
-    """ Send email notification. """
-    smtp_server = cfg.smtp_server
-    smtp_port = cfg.smtp_port
-    from_addr = cfg.smtp_from
-    to_addr = ', '.join(notification['email'])
-    message_body = template.render(**instance_data)
-    text = f'Subject: {notification["name"]} :: {notification["status"]}\n\n{message_body}'
-
-    logging.info(f'NOTIFY: {notification["name"]} :: {notification["status"]}')
-    logging.info(text)
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.ehlo()
-            server.sendmail(from_addr, to_addr, text)
-            server.quit()
-    except Exception as e:
-        logging.warning(f'SMTP Server [{smtp_server}:{smtp_port}]: {e}.')
-        pass
 
 
 def extract_scan_meta(scan):

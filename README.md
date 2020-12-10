@@ -140,11 +140,11 @@ Default template using some of the variables:
 {{ name }}
 details: {{ details }}
 
-targets:
+Targets:
     scanned IPs: {{ scannedIPs }}
     total IPs:   {{ totalIPs }}
 
-checks:
+Checks:
     completed:  {{ completedChecks }}
     total:      {{ totalChecks }}
 
@@ -164,11 +164,11 @@ notification.
 RTP Office - Discovery
 details: Discovery scan designed to test a roll-over scan.
 
-targets:
+Targets:
     scanned IPs: 1
     total IPs:   256
 
-checks:
+Checks:
     completed:  123804
     total:      31693824
 
