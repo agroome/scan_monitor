@@ -94,7 +94,7 @@ sudo ./scan_monitor/install.sh
 ```
 
 Edit /opt/scan_monitor/etc/config.json (poll_interval in seconds)
-```javascript
+```
 {
     "access_key": "5fd58650...",
     "secret_key": "4f4a1866...",
@@ -181,7 +181,7 @@ Import Blocked.
 
 Read about Jinja templates here: [Jinja2 docs](https://jinja2docs.readthedocs.io/)
 
-### File locations
+### Logging
  - /opt/scan_monitor/var/log/notify.log
  - /opt/scan_monitor/etc/config.json
 
