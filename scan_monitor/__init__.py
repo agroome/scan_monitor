@@ -9,8 +9,8 @@ APP_DIR = '/opt/scan_monitor'
 
 
 logfile = os.path.join(APP_DIR, 'var', 'log', 'notify.log')
-logging.basicConfig(filename=logfile, filemode='w', level=logging.INFO)
-logging.info('starting logging')
+logging.basicConfig(filename=logfile, filemode='a', level=logging.WARNING)
+
 
 env_file = os.path.join(APP_DIR, '.env')
 json_file = os.path.join(APP_DIR, 'etc', 'config.json')
