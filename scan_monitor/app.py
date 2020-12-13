@@ -3,10 +3,17 @@ import logging
 import time
 from tenable.sc import TenableSC
 from scan_monitor import config
-from scan_monitor.util import extract_scan_meta
+from scan_monitor.util import parse_scan_instance
 from scan_monitor.notify import SMTP
 
 template = config.jinja_env.get_template('notification.j2')
+
+try:
+    tsc = TenableSC(
+        host=config.sc_host, port=config.sc_port, access_key=config.access_key, secret_key=config.secret_key
+    )
+except Exception as e:
+    logging.error(e)
 
 request_fields = [
     'id', 'name', 'description', 'status', 'initiator', 'owner', 'ownerGroup',
@@ -21,83 +28,90 @@ notification_states = ['Running', 'Paused', 'Completed', 'Partial', 'Error']
 end_states = notification_states[2:]
 
 
-def read_state_table(filename):
-    try:
-        with open(filename) as f:
-            state = json.load(f)
-    except FileNotFoundError:
-        state = None
-    return state
+class StateTable:
+    filename = config.state_file
 
+    def __init__(self, filename=None):
+        if filename is not None:
+            self.filename = filename
 
-def write_state_table(filename, state):
-    with open(filename, 'w') as f:
-        json.dump(state, f)
+    def read(self):
+        try:
+            with open(self.filename) as f:
+                state = json.load(f)
+        except FileNotFoundError:
+            state = None
+        return state
+
+    def write(self, state):
+        try:
+            with open(self.filename, 'w') as f:
+                json.dump(state, f)
+        except Exception as e:
+            logging.error(e)
 
 
 def process_instances(scan_instances, saved_state=None):
     # create a lookup by id, we will refer to this later for instances that are no longer running
-    instances = {instance['id']: instance for instance in scan_instances}
+    instance_lookup = {instance['id']: instance for instance in scan_instances}
 
-    # initialize new_state with any active instances
-    new_state = {index: instance for index, instance in instances.items() if instance['running'] == 'true'}
+    # initialize state with any active instances (running or paused)
+    running_instances = {i: instance for i, instance in instance_lookup.items() if instance['running'] == 'true'}
 
-    # send notifications for new instances not yet in saved_state
     if saved_state is not None:
-        for instance_id in set(new_state) - set(saved_state):
-            instance = new_state[instance_id]
-            if instance['status'] in notification_states:
-                notification_meta = extract_scan_meta(instance)
-                if notification_meta:
-                    logging.info('email = %s', notification_meta.get('email', 'UNKNOWN'))
-                    transition = f'NEW ==> {instance["status"]}'
-                    smtp = SMTP(notification_meta, instance)
-                    smtp.send_smtp()
-                    logging.info(transition)
-                else:
-                    logging.info('missing notification meta')
+        num = len(saved_state)
+        logging.info(f'reviewing {num} saved items')
 
         # review instances in saved_state for status changes
         for instance_id, saved_instance in saved_state.items():
-            # reference new information
-            instance = instances.get(instance_id)
+
+            instance = running_instances.get(instance_id)
             if instance is None:  # no longer listed or outside of filtered range
-                continue
+                # check completion status in all instances
+                instance = instance_lookup.get(instance_id)
+                if instance is None:  # likely deleted
+                    logging.info(f'item {instance_id} not listed: CONTINUE to next')
+                    continue
+                # no longer running
+                logging.info('instance no longer running')
 
             if instance['status'] != saved_instance['status'] and instance['status'] in notification_states:
-                transition = f'{saved_instance["status"]} ==> {instance["status"]}'
-                logging.info(transition)
-                notification_meta = extract_scan_meta(instance)
-                if notification_meta:
-                    smtp = SMTP(notification_meta, instance)
-                    smtp.send_smtp()
+                logging.debug(f'{instance_id} IS ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
+                instance = parse_scan_instance(instance)
+                if 'smtp_notification' in instance:
+                    logging.debug('INSTANCE HAS SMTP_NOTIFICATION')
+                    smtp = SMTP(instance)
+                    smtp.send()
+            else:
+                logging.info(f'{instance_id} NOT ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
 
-            # maintain state with the latest meta data
-            if instance['status'] not in end_states:
-                new_state[instance_id] = instance
+        # next send notifications for new instances that are not yet in saved_state
+        for instance_id in set(running_instances) - set(saved_state):
+            instance = running_instances[instance_id]
+            logging.debug(f'processing new instance status: {instance["status"]}')
+            if instance['status'] in notification_states:
+                instance = parse_scan_instance(instance)
+                if 'smtp_notification' in instance:
+                    logging.debug('INSTANCE HAS SMTP_NOTIFICATION')
+                    # first time we have seen this one, save the state and notify
+                    smtp = SMTP(instance)
+                    smtp.send()
 
-    return new_state
+    return running_instances
 
 
-def poll_active_scans():
+def poll_active_scans(state=StateTable()):
     try:
-        tsc = TenableSC(
-            host=config.sc_host,
-            port=config.sc_port,
-            access_key=config.access_key,
-            secret_key=config.secret_key
-        )
         scan_instances = tsc.scan_instances.list(fields=request_fields)['usable']
-
-        saved_state = read_state_table(config.state_file)
-        new_state = process_instances(scan_instances, saved_state)
-        write_state_table(config.state_file, new_state)
-
+        state.write(process_instances(scan_instances, state.read()))
     except Exception as e:
         logging.error(e)
 
 
-def start_monitor():
+def start_monitor(poll_interval=config.poll_interval):
+    """ start_monitor will run a continuous loop that polls the server every 'poll_interval'. """
+
+    state = StateTable()
     while True:
-        poll_active_scans()
-        time.sleep(config.poll_interval)
+        poll_active_scans(state)
+        time.sleep(poll_interval)

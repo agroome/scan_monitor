@@ -4,12 +4,14 @@ import os
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 
-
 APP_DIR = '/opt/scan_monitor'
-
-
 logfile = os.path.join(APP_DIR, 'var', 'log', 'notify.log')
-logging.basicConfig(filename=logfile, filemode='a', level=logging.WARNING)
+logging.basicConfig(
+    filename=logfile,
+    filemode='a',
+    format='%(asctime)s %(message)s',
+    datefmt='%m/%d/%Y %h:%M:%S',
+    level=logging.INFO)
 
 
 env_file = os.path.join(APP_DIR, '.env')

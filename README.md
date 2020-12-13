@@ -20,73 +20,74 @@ scan_monitor polls the Tenable.sc API to provide enhanced email notification cap
 - Define email distribution in the form of metadata appended to the scan definition.
 
 - Create custom messages using Jinja templates and metadata associated with the scan
- 
+
+## Requirements 
+ - Python 3.6+
+ - Install script for Ubuntu, follow along for other OS
+ - requires python3-venv and python3-systemd
 
 ## Getting Started
+### Installation 
+Follow the steps below to generate API keys for a least privileged account on Tenable.sc.
+- [Ensure API Keys Are Enabled](#ensure-api-keys-are-enabled)
 
-- [Enable API keys on Tenable.sc](#enable-api-keys-on-tenablesc)
+- [Create a Restricted Role](#create-a-restricted-role)
 
-- [Create a service account](#create-a-service-account)
+- [Create an Account with the Restricted Role](#create-an-account-with-the-restricted-role)
 
-- [Generate API Keys](#generate-api-keys)
+- [Generate API Keys](#create-tenablesc-account-and-api-keys)
+
+On another system that is sufficiently secured
 
 - [Install and configure scan_monitor](#install-and-configure-scan_monitor)
+
+### Usage and customization
 
 - [Configure email notifications](#configure-email-notifications)
 
 - [Customize email template](#configure-email-notifications)
 
 
-### Enable API keys on Tenable.sc
+## Ensure Api Keys are Enabled
+Complete this step as the Admin user
 
-Complete this step as the Admin user.
+- Go to (System / Configuration / Security)
+    
+- Check the box for 'Allow API keys'
+## Create a restricted role 
+Switch to an account with Security Manager privileges for the following steps
+- Go to (Users / Roles)
+    
+- Click on Add Role
+    
+- Name the role, i.e. "Monitor"
+    
+- Turn off all of the permissions, ensure all boxes are unchecked
+    
+- Click Submit
+## Create an account with the restricted role
 
-- Ensure API Keys are enabled
-
-    - Go to (System / Configuration / Security)
+- Go to (Users)
     
-    - Check the box for 'Allow API keys'
-   
-### Create a service account
-Switch to an account with Security Manager privileges for the next steps.
-
-- Create a new role with no permissions enabled 
-
-    - Go to (Users / Roles)
+- Click on Add User
     
-    - Click on Add Role
-    
-    - Name the role, i.e. "Monitor"
-    
-    - Turn off all of the permissions, ensure all boxes are unchecked
-    
-    - Click Submit
-    
-- Create an account limited to the restricted role
-
-    - Go to (Users)
-    
-    - Click on Add User
-    
-    - Add the user to:
-        - Full Access Group 
+- Add the user to:
+    - Full Access Group 
         
-        - The role created in step (2)
+    - The restricted role created in the previous step
     
-    - Click Submit
-    
-    
-### Generate API Keys
-Also using a Security Manager account.
- - Go to (Users)
-    
- - Click the Gear on right side of the user list
-    
- - Select Generate API Keys
-    
- - Record the keys to a secure file or keep this window open for the next step
+- Click Submit
+## Generate API Keys
 
-### Install and configure scan_monitor
+- Go to (Users)
+    
+- Click the Gear on right side of the user list
+    
+- Select Generate API Keys
+    
+- Record the keys to a secure file or keep this window open for the next step
+
+## Install and configure scan_monitor
 Clone the repository, then run install.sh
 ```
 git clone https://github.com/agroome/scan_monitor 
