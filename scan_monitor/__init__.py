@@ -20,6 +20,7 @@ json_file = os.path.join(APP_DIR, 'etc', 'config.json')
 load_dotenv(dotenv_path=env_file)
 
 DEFAULT_DELIMITER_REGEX = '---+ do not delete .*'
+DEFAULT_TEMPLATE = 'notification.j2'
 DEFAULT_INTERVAL = 15
 DEFAULT_SMTP_PORT = 25
 DEFAULT_SC_PORT = 443
@@ -41,6 +42,7 @@ class Config:
         template_dir = os.path.join(APP_DIR, 'templates')
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
         self.state_file = os.path.join(APP_DIR, 'state.json')
+        self.default_template = DEFAULT_TEMPLATE
 
         if json_config is not None:
             logging.debug(f'opening {json_config}')

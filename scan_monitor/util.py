@@ -24,34 +24,30 @@ def parse_scan_instance(scan):
 
     # any lines after 'line_number' are expected to be configParser data
     config_lines = lines[line_number + 1:]
+
+    # replace (description + config_lines) with just the description
+    scan['description'] = '\n'.join(lines[:line_number])
+
     if config_lines:
         try:
-            logging.info(f'parsing config for {scan["name"]}')
-            # overwrite (description + config_lines) with just the description
-            # we're likely to use that in the formatted message
-            # scan['description'] = '\n'.join(lines[:line_number])
-            logging.info('\n'.join(config_lines))
-
             config_parser = ConfigParser(allow_no_value=True)
             config_parser.read_string('\n'.join(config_lines))
 
-            logging.info('READING to: value')
-            to_value = config_parser['email notification'].get('to')
-            logging.info(f'to: {to_value}')
-
-            matching_addresses = to_value and re.findall(email_pattern, to_value)
-            logging.info(f'matching addresses: {matching_addresses}')
-            if matching_addresses:
-                logging.info(f'matching addresses: {matching_addresses}')
-                scan['smtp_notification'] = dict(to=','.join(matching_addresses))
-                subject_template = config_parser['email notification'].get('subject')
-                if subject_template:
-                    scan['smtp_notification']['subject'] = Template(subject_template).render(**scan)
+            if 'email notification' in config_parser:
+                to_value = config_parser['email notification'].get('to')
+                matching_addresses = to_value and re.findall(email_pattern, to_value)
+                if matching_addresses:
+                    scan['smtp_notification'] = dict(to_address=','.join(matching_addresses))
+                    subject_template = config_parser['email notification'].get('subject')
+                    if subject_template:
+                        scan['smtp_notification']['subject'] = Template(subject_template).render(**scan)
+                else:
+                    logging.warning('%s: expecting "to" field in [email notification] section. %s', scan["name"])
             else:
-                logging.warning('%s: expecting "to" field in [email notification] section. %s', scan["name"])
+                logging.error('%s: missing [email notification] section in scan definition suffix. %s', scan["name"])
 
         except MissingSectionHeaderError:
-            logging.warning('%s: missing [email notification] section in scan definition suffix. %s', scan["name"])
+            logging.error('%s: missing [email notification] section in scan definition suffix. %s', scan["name"])
 
     return scan
 
