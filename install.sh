@@ -8,22 +8,22 @@ fi
 APP_DIR=/opt/scan_monitor
 SRC_DIR=$(dirname "$0")
 
-
-/usr/bin/apt install -y python3-venv python3-systemd
+/usr/bin/apt update
+/usr/bin/apt install -y python3-pip python3-venv python3-systemd
 
 # create virtual environment in APP_DIR
 if [[ ! -d "$APP_DIR" ]]; then
   /bin/echo "*** Installing virtual environment in $APP_DIR"
-  python3 -m venv "$APP_DIR"
+  /usr/bin/python3 -m venv "$APP_DIR"
 fi
+# install wheel and scan_monitor into virtual env
+$APP_DIR/bin/pip install wheel
+$APP_DIR/bin/pip install -U "$SRC_DIR"
 
 if [[ ! -d "$APP_DIR/templates" ]]; then
     /bin/echo "*** copying templates $APP_DIR"
     /bin/cp -r "$SRC_DIR/scan_monitor/templates" "$APP_DIR"
 fi
-
-# install scan_monitor into virtual env
-$APP_DIR/bin/pip install -U "$SRC_DIR"
 
 # setup systemd unit file
 if [[ ! -f /etc/systemd/system/scan_monitor.service ]]; then
