@@ -19,11 +19,15 @@ json_file = os.path.join(APP_DIR, 'etc', 'config.json')
 
 load_dotenv(dotenv_path=env_file)
 
-DEFAULT_DELIMITER_REGEX = '---+ do not delete .*'
+DEFAULT_DELIMITER_REGEX = '---+ do not delete .*---'
 DEFAULT_TEMPLATE = 'notification.j2'
 DEFAULT_INTERVAL = 15
 DEFAULT_SMTP_PORT = 25
 DEFAULT_SC_PORT = 443
+
+
+class MissingConfig(Exception):
+    pass
 
 
 class Config:
@@ -44,8 +48,8 @@ class Config:
         self.state_file = os.path.join(APP_DIR, 'state.json')
         self.default_template = DEFAULT_TEMPLATE
 
-        if json_config is not None:
-            logging.debug(f'opening {json_config}')
+        if json_config:
+            logging.debug(f'using configuration file {json_config}')
             with open(json_config) as f:
                 cfg = json.load(f)
             self.access_key = self.access_key or cfg.get('access_key')
@@ -60,7 +64,13 @@ class Config:
             self.smtp_secret = self.smtp_secret or cfg.get('smtp_secret')
 
 
-config = Config(json_config=json_file)
+try:
+    config = Config(json_config=json_file)
+except FileNotFoundError as e:
+    config = Config()
+    if not config.access_key and config.secret_key and config.sc_host:
+        logging.error('Missing Tenable.sc configuration parameters.')
+        raise MissingConfig
 
 
 

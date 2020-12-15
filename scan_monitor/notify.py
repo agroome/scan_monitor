@@ -20,7 +20,7 @@ class SMTP:
         self.notification = notification
 
     @property
-    def message_subject(self):
+    def subject(self):
         if self.subject_template:
             subject = Template(self.subject_template).render(**self.notification)
         else:
@@ -28,12 +28,13 @@ class SMTP:
         return f'Subject: {subject}'
 
     @property
-    def message_body(self):
+    def body(self):
         body = self.template.render(**self.notification)
         return body
 
     def send(self):
-        message = '\n\n'.join([self.message_subject, self.message_body])
+        message = '\n\n'.join([self.subject, self.body])
+        logging.debug(f'sending: {message}')
         try:
             if self.port == 25:
                 with smtplib.SMTP(self.server, self.port) as server:

@@ -14,6 +14,7 @@ try:
     )
 except Exception as e:
     logging.error(e)
+    exit(1)
 
 request_fields = [
     'id', 'name', 'description', 'status', 'initiator', 'owner', 'ownerGroup',
@@ -41,6 +42,8 @@ class StateTable:
                 state = json.load(f)
         except FileNotFoundError:
             state = None
+        except Exception as e:
+            logging.error(e)
         return state
 
     def write(self, state):
@@ -59,21 +62,17 @@ def process_instances(scan_instances, saved_state=None):
     running_instances = {i: instance for i, instance in instance_lookup.items() if instance['running'] == 'true'}
 
     if saved_state is not None:
-        num = len(saved_state)
-        logging.info(f'reviewing {num} saved items')
-
         # review instances in saved_state for status changes
         for instance_id, saved_instance in saved_state.items():
-
             instance = running_instances.get(instance_id)
             if instance is None:  # no longer listed or outside of filtered range
                 # check completion status in all instances
                 instance = instance_lookup.get(instance_id)
                 if instance is None:  # likely deleted
-                    logging.info(f'item {instance_id} not listed: CONTINUE to next')
+                    logging.debug(f'item {instance_id} not listed: CONTINUE to next')
                     continue
                 # no longer running
-                logging.info('instance no longer running')
+                logging.debug('instance no longer running')
 
             if instance['status'] != saved_instance['status'] and instance['status'] in notification_states:
                 logging.debug(f'{instance_id} IS ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
@@ -82,8 +81,10 @@ def process_instances(scan_instances, saved_state=None):
                     logging.debug('INSTANCE HAS SMTP_NOTIFICATION')
                     smtp = SMTP(instance)
                     smtp.send()
+                else:
+                    logging.error(f'{instance["name"]} NO to_address in notification data')
             else:
-                logging.info(f'{instance_id} NOT ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
+                logging.debug(f'{instance_id} NOT ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
 
         # next send notifications for new instances that are not yet in saved_state
         for instance_id in set(running_instances) - set(saved_state):
