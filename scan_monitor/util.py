@@ -3,7 +3,7 @@ import re
 from configparser import ConfigParser, MissingSectionHeaderError
 from scan_monitor import config
 from jinja2 import Template
-from scan_monitor.notify import email_pattern, EMAIL_SECTION
+from scan_monitor import email_pattern, EMAIL_SECTION
 
 template = config.jinja_env.get_template('notification.j2')
 
