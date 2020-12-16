@@ -1,28 +1,35 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="scan_monitor",
-    version="0.0.1",
-    author="Andy Groome",
-    author_email="groome.andy@gmail.com",
-    description="Monitor and scan status",
+    name='scan_monitor',
+    version='0.',
+    author='Andy Groome',
+    author_email='groome.andy@gmail.com',
+    description='Monitor and scans and notify when status changes',
     long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/agroome/scan_monitor",
-    packages=["scan_monitor"],
-    install_requires=["jinja2", "python-systemd", "python-dotenv", "pytenable"],
+    long_description_content_type='text/markdown',
+    url='https://github.com/agroome/scan_monitor',
+    packages=['scan_monitor'],
+    install_requires=[
+        'Click',
+        'Jinja2',
+        'pytenable',
+        'python-systemd',
+        'python-dotenv',
+    ],
     entry_points={
-        "console_scripts": [
-            "scan_monitor = scan_monitor.app:start_monitor"
+        'console_scripts': [
+            'scan_monitor=scan_monitor.app:start_monitor',
+            'configure=scan_monitor.cli:configure'
         ]
     },
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
     ],
     python_requires='>=3.6',
 )

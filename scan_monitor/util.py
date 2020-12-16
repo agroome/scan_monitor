@@ -3,11 +3,9 @@ import re
 from configparser import ConfigParser, MissingSectionHeaderError
 from scan_monitor import config
 from jinja2 import Template
+from scan_monitor.notify import email_pattern, EMAIL_SECTION
 
 template = config.jinja_env.get_template('notification.j2')
-
-email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.+-]+')
-EMAIL_SECTION = 'email notification'
 
 
 def extract_cfg(record, field, delimiter, repair_record=True):

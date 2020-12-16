@@ -1,26 +1,44 @@
 import json
 import logging
 import os
+import re
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
 
-APP_DIR = '/opt/scan_monitor'
-logfile = os.path.join(APP_DIR, 'var', 'log', 'notify.log')
+email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+')
+EMAIL_SECTION = 'email notification'
+
+app_dir = Path(os.getenv('APP_DIR', '/opt/scan_monitor'))
+logfile = app_dir / 'var/log/notify.log'
+env_file = app_dir / '.env'
+json_file = app_dir / 'etc/config.json'
+
+
+def update_cfg(cfg, file=json_file):
+    data = dict()
+    if os.path.isfile(file):
+        with open(file) as f:
+            data = json.load(f)
+
+    data.update(cfg)
+    with open(file, 'w') as f:
+        json.dump(data, f)
+
+
 logging.basicConfig(
     filename=logfile,
     filemode='a',
     format='%(asctime)s %(message)s',
     datefmt='%m/%d/%Y %h:%M:%S',
-    level=logging.INFO)
+    level=logging.WARNING)
 
-
-env_file = os.path.join(APP_DIR, '.env')
-json_file = os.path.join(APP_DIR, 'etc', 'config.json')
 
 load_dotenv(dotenv_path=env_file)
 
 DEFAULT_DELIMITER_REGEX = '---+ do not delete .*---'
 DEFAULT_TEMPLATE = 'notification.j2'
+
 DEFAULT_INTERVAL = 15
 DEFAULT_SMTP_PORT = 25
 DEFAULT_SC_PORT = 443
@@ -43,9 +61,9 @@ class Config:
     smtp_secret = os.getenv('SMTP_SECRET')
 
     def __init__(self, json_config=None):
-        template_dir = os.path.join(APP_DIR, 'templates')
+        template_dir = os.path.join(app_dir, 'templates')
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
-        self.state_file = os.path.join(APP_DIR, 'state.json')
+        self.state_file = os.path.join(app_dir, 'state.json')
         self.default_template = DEFAULT_TEMPLATE
 
         if json_config:
@@ -71,6 +89,4 @@ except FileNotFoundError as e:
     if not config.access_key and config.secret_key and config.sc_host:
         logging.error('Missing Tenable.sc configuration parameters.')
         raise MissingConfig
-
-
 
