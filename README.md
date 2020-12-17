@@ -94,22 +94,12 @@ git clone https://github.com/agroome/scan_monitor
 sudo ./scan_monitor/install.sh
 ```
 
-Edit /opt/scan_monitor/etc/config.json (poll_interval in seconds)
+After installing run configure
 ```
-{
-    "access_key": "5fd58650...",
-    "secret_key": "4f4a1866...",
-    "sc_host": "192.168.10.10",
-    "sc_port": 443,
-    "poll_interval": 15,
-    "smtp_server": "192.168.10.20",
-    "smtp_port": 25,
-    "from_address": "scanman@example.com"
-}
+sudo /opt/scan_monitor/bin/configure
 ```
 
-### Start the scan_monitor service
-Control the service with systemctl. For example:
+Once configured, use systemctl to start the service.
 ```
 sudo systemctl start scan_monitor.service
 ```
