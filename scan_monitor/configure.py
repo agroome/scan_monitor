@@ -45,15 +45,18 @@ load_dotenv(env_file)
 @click.option(
     '--smtp-password',
     help='SMTP password if required',
+    is_flag=True,
+    default=False,
     default=lambda: os.environ.get('SMTP_PASSWORD'))
 def configure(tsc_server, tsc_port, access_key, secret_key, smtp_server, smtp_port, smtp_from, smtp_password):
     """Gather configuration parameters and write them to the APP_DIR/.env file."""
+
     cfg = dict(
         tsc_server=tsc_server, tsc_port=tsc_port, access_key=access_key, secret_key=secret_key,
         smtp_server=smtp_server, smtp_port=smtp_port, smtp_from=smtp_from
     )
-    if smtp_password is not None:
-        cfg['smtp_password'] = smtp_password
+    if smtp_password:
+        cfg['smtp_password'] = click.prompt('SMTP password')
 
     with open(env_file, 'w') as f:
         f.writelines([f'{k.upper()}={v}\n' for k, v in cfg.items()])

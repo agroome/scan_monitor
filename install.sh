@@ -8,26 +8,29 @@ fi
 APP_DIR=/opt/scan_monitor
 SRC_DIR=$(dirname "$0")
 
+# install system dependencies
 /usr/bin/apt update
 /usr/bin/apt install -y python3-pip python3-venv python3-systemd
 
-# create virtual environment in APP_DIR
-if [[ ! -d "$APP_DIR" ]]; then
-  /bin/echo "*** Installing virtual environment in $APP_DIR"
-  /usr/bin/python3 -m venv "$APP_DIR"
-fi
+/bin/echo "*** Installing scan_monitor into $APP_DIR"
+# add scan monitor user
+/usr/sbin/adduser --quiet --home $APP_DIR --gecos "" --disabled-login scan_monitor
+
+# create log directory
+/bin/mkdir -p $APP_DIR/var/log
+# install the virtual environment and append 'activate' to .bash_profile
+/usr/bin/python3 -m venv "$APP_DIR"
+/usr/bin/echo "source $APP_DIR/bin/activate" > "$APP_DIR/.bash_profile"
+
+# copy templates
+/bin/cp -r "$SRC_DIR/scan_monitor/templates" "$APP_DIR"
+
 # install wheel and scan_monitor into virtual env
 $APP_DIR/bin/pip install wheel
-$APP_DIR/bin/pip install -U "$SRC_DIR"
+$APP_DIR/bin/pip install "$SRC_DIR"
 
-if [[ ! -d "$APP_DIR/templates" ]]; then
-    /bin/echo "*** copying templates $APP_DIR"
-    /bin/cp -r "$SRC_DIR/scan_monitor/templates" "$APP_DIR"
-fi
-
-# setup systemd unit file
-if [[ ! -f /etc/systemd/system/scan_monitor.service ]]; then
-    cat > /etc/systemd/system/scan_monitor.service <<EOF
+# setup systemd unit file and do a daemon-reload
+/usr/bin/cat > /etc/systemd/system/scan_monitor.service <<EOF
 [Unit]
 Description=Scan Monitor
 After=multi-user.target
@@ -42,37 +45,29 @@ ExecStart=$APP_DIR/bin/scan_monitor
 [Install]
 WantedBy=multi-user.target
 EOF
-    /bin/systemctl daemon-reload
-fi
+/bin/systemctl daemon-reload
 
-if ! id scan_monitor > /dev/null 2>&1; then
-  /bin/echo "creating scan_monitor user"
-  /usr/sbin/useradd --system scan_monitor
-fi
+# create ENV_FILE with some defaults and set permissions
+ENV_FILE=$APP_DIR/.monitor_env
+/usr/bin/cat > $ENV_FILE << EOF
+TSC_PORT=445
+SMTP_PORT=25
+EOF
+/bin/chmod 400 $ENV_FILE
 
-# setup folders and config file
-if [[ ! -d "$APP_DIR"/etc ]]; then
-  /bin/mkdir -p "$APP_DIR"/etc
-  /bin/cp "$SRC_DIR"/config.json.sample "$APP_DIR"/etc/config.json
-fi
-# create log directory
-if [[ ! -d "$APP_DIR"/var/log ]]; then
-  /bin/mkdir -p "$APP_DIR"/var/log
-fi
-
-# set ownership and ensure read permsisions are restricted on config.json
-/bin/chown scan_monitor:scan_monitor -R "$APP_DIR"
-/bin/chmod 400 "$APP_DIR"/etc/config.json
-
-/bin/echo "###  Installation complete. "
-/bin/echo "### "
-/bin/echo "###  Edit the values in /opt/scan_monitor/etc/config.json to suit your environment. You will need: "
-/bin/echo "###    - Tenable.sc API key pair "
-/bin/echo "###    - Tenable.sc IP address or hostname and port "
-/bin/echo "###    - SMTP ServerTenable.sc IP address or hostname and port "
-/bin/echo "###    - Email 'from_address'"
-/bin/echo "###  "
-/bin/echo "###  After editing config.json, start the scan_monitor service: "
-/bin/echo "###  "
-/bin/echo "###  sudo /bin/systemctl start scan_monitor"
-/bin/echo "###  "
+/bin/echo "###                                                                        "
+/bin/echo "###  Installation complete.                                                "
+/bin/echo "###                                                                        "
+/bin/echo "###  Next, run the configure command to configure application settings.    "
+/bin/echo "###                                                                        "
+/bin/echo "###     sudo $APP_DIR/bin/configure                                        "
+/bin/echo "###                                                                        "
+/bin/echo "###  If a password is required smtp, include the --smtp-password flag      "
+/bin/echo "###                                                                        "
+/bin/echo "###     sudo $APP_DIR/bin/configure --smtp-password                        "
+/bin/echo "###                                                                        "
+/bin/echo "###  After completing the configuration, start the monitor with the        "
+/bin/echo "###  following command:                                                    "
+/bin/echo "###                                                                        "
+/bin/echo "###     sudo /bin/systemctl start scan_monitor                             "
+/bin/echo "###                                                                        "

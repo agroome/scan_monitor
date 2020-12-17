@@ -1,47 +1,40 @@
 import json
 import logging
 import os
-import re
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
-email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+')
-EMAIL_SECTION = 'email notification'
+# application defaults
+DEFAULT_APP_DIR = '/opt/scan_monitor'
+DEFAULT_DELIMITER = '--- do not delete below this line ---'
+DEFAULT_DELIMITER_REGEX = '---+ do not delete .*---'
+DEFAULT_TEMPLATE = 'notification.j2'
+DEFAULT_INTERVAL = 15
+DEFAULT_SMTP_PORT = 25
+DEFAULT_SC_PORT = 443
 
-app_dir = Path(os.getenv('APP_DIR', '/opt/scan_monitor'))
-logfile = app_dir / 'var/log/notify.log'
+# application files
+app_dir = Path(os.environ.get('APP_DIR', DEFAULT_APP_DIR))
+logfile = app_dir / 'var' / 'log' / 'notify.log'
 env_file = app_dir / '.env'
-json_file = app_dir / 'etc/config.json'
-
-
-def update_cfg(cfg, file=json_file):
-    data = dict()
-    if os.path.isfile(file):
-        with open(file) as f:
-            data = json.load(f)
-
-    data.update(cfg)
-    with open(file, 'w') as f:
-        json.dump(data, f)
-
+json_file = app_dir / 'etc' / 'config.json'
+state_file = app_dir / 'state.json'
+template_dir = app_dir / 'templates'
 
 logging.basicConfig(
     filename=logfile,
     filemode='a',
     format='%(asctime)s %(message)s',
     datefmt='%m/%d/%Y %h:%M:%S',
-    level=logging.WARNING)
+    level=logging.INFO)
 
+
+# logfile = os.path.join(app_dir, 'var', 'log', 'notify.log')
+# env_file = os.path.join(app_dir, '.env')
+# json_file = os.path.join(app_dir, 'etc', 'config.json')
 
 load_dotenv(dotenv_path=env_file)
-
-DEFAULT_DELIMITER_REGEX = '---+ do not delete .*---'
-DEFAULT_TEMPLATE = 'notification.j2'
-
-DEFAULT_INTERVAL = 15
-DEFAULT_SMTP_PORT = 25
-DEFAULT_SC_PORT = 443
 
 
 class MissingConfig(Exception):
@@ -51,19 +44,18 @@ class MissingConfig(Exception):
 class Config:
     access_key = os.getenv('ACCESS_KEY')
     secret_key = os.getenv('SECRET_KEY')
-    sc_host = os.getenv('SC_HOST')
-    sc_port = os.getenv('SC_PORT')
+    sc_host = os.getenv('TSC_HOST')
+    sc_port = os.getenv('TSC_PORT')
     poll_interval = os.getenv('POLL_INTERVAL')
-    meta_delimiter = os.getenv('META_DELIMITER')
+    meta_delimiter = os.getenv('FIELD_DELIMITER')
     smtp_server = os.getenv('SMTP_SERVER')
     smtp_port = os.getenv('SMTP_PORT')
     smtp_from = os.getenv('SMTP_FROM')
-    smtp_secret = os.getenv('SMTP_SECRET')
+    smtp_secret = os.getenv('SMTP_PASSWORD')
 
     def __init__(self, json_config=None):
-        template_dir = os.path.join(app_dir, 'templates')
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
-        self.state_file = os.path.join(app_dir, 'state.json')
+        self.state_file = state_file
         self.default_template = DEFAULT_TEMPLATE
 
         if json_config:
@@ -89,4 +81,6 @@ except FileNotFoundError as e:
     if not config.access_key and config.secret_key and config.sc_host:
         logging.error('Missing Tenable.sc configuration parameters.')
         raise MissingConfig
+
+
 
