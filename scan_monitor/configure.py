@@ -16,7 +16,12 @@ load_dotenv(env_file)
     '--tsc-port',
     prompt='Tenable.sc port',
     help='Tenable.sc port',
-    default=lambda: os.environ.get('TSC_PORT', 443))
+    default=lambda: int(os.environ.get('TSC_PORT', 443)))
+@click.option(
+    '--poll-interval',
+    prompt='Poll interval',
+    help='Interval (in seconds) to poll Tenable.sc for scan status',
+    default=lambda: int(os.environ.get('POLL_INTERVAL', 15)))
 @click.option(
     '--access-key',
     help='Tenable.sc access key',
@@ -36,27 +41,20 @@ load_dotenv(env_file)
     '--smtp-port',
     help='SMTP port',
     prompt='SMTP port',
-    default=lambda: os.environ.get('SMTP_PORT'))
+    default=lambda: int(os.environ.get('SMTP_PORT', 25)))
 @click.option(
     '--smtp-from',
     help='SMTP from address',
     prompt='From address',
     default=lambda: os.environ.get('SMTP_FROM'))
-@click.option(
-    '--smtp-password',
-    help='SMTP password if required',
-    is_flag=True,
-    default=False,
-    default=lambda: os.environ.get('SMTP_PASSWORD'))
-def configure(tsc_server, tsc_port, access_key, secret_key, smtp_server, smtp_port, smtp_from, smtp_password):
+# @click.option('--smtp-password', is_flag=True, help='This flag generates a prompt for your SMTP password')
+def configure(tsc_server, tsc_port, poll_interval, access_key, secret_key, smtp_server, smtp_port, smtp_from):
     """Gather configuration parameters and write them to the APP_DIR/.env file."""
 
     cfg = dict(
-        tsc_server=tsc_server, tsc_port=tsc_port, access_key=access_key, secret_key=secret_key,
-        smtp_server=smtp_server, smtp_port=smtp_port, smtp_from=smtp_from
-    )
-    if smtp_password:
-        cfg['smtp_password'] = click.prompt('SMTP password')
+        tsc_server=tsc_server, tsc_port=tsc_port, poll_interval=poll_interval,
+        access_key=access_key, secret_key=secret_key,
+        smtp_server=smtp_server, smtp_port=smtp_port, smtp_from=smtp_from)
 
     with open(env_file, 'w') as f:
         f.writelines([f'{k.upper()}={v}\n' for k, v in cfg.items()])

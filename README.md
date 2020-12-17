@@ -118,9 +118,13 @@ sudo systemctl start scan_monitor.service
 Include the following at the end of a Tenable.sc scan description to enable notifications for the scan.
 
 ```
---- do not delete below this line ---
-[notifications]
-email: user1@example.com, user2@example.com, user3@example.com 
+This is the description.
+
+
+-------- do not delete this line and below --------      
+[email notification]
+to: agroome@tenable.com
+subject: {{ name }}: {{ status }}
 ```
 
 ### Customize notification template

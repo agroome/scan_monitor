@@ -17,7 +17,7 @@ DEFAULT_SC_PORT = 443
 # application files
 app_dir = Path(os.environ.get('APP_DIR', DEFAULT_APP_DIR))
 logfile = app_dir / 'var' / 'log' / 'notify.log'
-env_file = app_dir / '.env'
+env_file = app_dir / '.monitor_env'
 json_file = app_dir / 'etc' / 'config.json'
 state_file = app_dir / 'state.json'
 template_dir = app_dir / 'templates'
@@ -26,13 +26,8 @@ logging.basicConfig(
     filename=logfile,
     filemode='a',
     format='%(asctime)s %(message)s',
-    datefmt='%m/%d/%Y %h:%M:%S',
-    level=logging.INFO)
-
-
-# logfile = os.path.join(app_dir, 'var', 'log', 'notify.log')
-# env_file = os.path.join(app_dir, '.env')
-# json_file = os.path.join(app_dir, 'etc', 'config.json')
+    datefmt='%m/%d/%Y %H:%M:%S',
+    level=logging.WARNING)
 
 load_dotenv(dotenv_path=env_file)
 
@@ -44,14 +39,14 @@ class MissingConfig(Exception):
 class Config:
     access_key = os.getenv('ACCESS_KEY')
     secret_key = os.getenv('SECRET_KEY')
-    sc_host = os.getenv('TSC_HOST')
-    sc_port = os.getenv('TSC_PORT')
-    poll_interval = os.getenv('POLL_INTERVAL')
-    meta_delimiter = os.getenv('FIELD_DELIMITER')
+    sc_host = os.getenv('TSC_SERVER')
+    sc_port = int(os.getenv('TSC_PORT', DEFAULT_SC_PORT))
+    poll_interval = int(os.getenv('POLL_INTERVAL', DEFAULT_INTERVAL))
     smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = os.getenv('SMTP_PORT')
+    smtp_port = int(os.getenv('SMTP_PORT', DEFAULT_SMTP_PORT))
     smtp_from = os.getenv('SMTP_FROM')
     smtp_secret = os.getenv('SMTP_PASSWORD')
+    field_delimiter_regex = DEFAULT_DELIMITER_REGEX
 
     def __init__(self, json_config=None):
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
@@ -67,20 +62,11 @@ class Config:
             self.sc_host = self.sc_host or cfg.get('sc_host')
             self.sc_port = int(self.sc_port or cfg.get('sc_port', DEFAULT_SC_PORT))
             self.poll_interval = int(self.poll_interval or cfg.get('poll_interval', DEFAULT_INTERVAL))
-            self.meta_delimiter = self.meta_delimiter or cfg.get('meta_delimiter', DEFAULT_DELIMITER_REGEX)
+            self.field_delimiter = self.field_delimiter or cfg.get('field_delimiter', DEFAULT_DELIMITER_REGEX)
             self.smtp_server = self.smtp_server or cfg.get('smtp_server')
             self.smtp_port = int(self.smtp_port or cfg.get('smtp_port', DEFAULT_SMTP_PORT))
             self.smtp_from = self.smtp_from or cfg.get('smtp_from')
             self.smtp_secret = self.smtp_secret or cfg.get('smtp_secret')
 
 
-try:
-    config = Config(json_config=json_file)
-except FileNotFoundError as e:
-    config = Config()
-    if not config.access_key and config.secret_key and config.sc_host:
-        logging.error('Missing Tenable.sc configuration parameters.')
-        raise MissingConfig
-
-
-
+config = Config()

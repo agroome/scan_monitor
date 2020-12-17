@@ -10,9 +10,10 @@ email_pattern = re.compile('[a-zA-Z][a-zA-Z0-9_.+-]+@[a-zA-Z0-9_.+-]+')
 EMAIL_SECTION = 'email notification'
 
 
-def extract_cfg(record, field, delimiter, repair_record=True):
+def extract_cfg(record, field, delimiter_regex, repair_record=True):
     # regex that separates the body of the field from the appended 'config'
-    regex_str = f'(?P<{field}>.*){delimiter}(?P<config>.*)'
+    regex_str = f'(?P<{field}>.*){delimiter_regex}(?P<config>.*)'
+
     partitions = re.search(regex_str, record.get(field, ''), re.DOTALL)
     if partitions and repair_record:
         record[field] = partitions.groupdict(field)
@@ -32,7 +33,7 @@ def extract_cfg(record, field, delimiter, repair_record=True):
 def parse_scan_instance(scan):
     """ Parse a scan instance. Inject smtp_notification if found in the scan description. """
 
-    cfg = extract_cfg(scan, field='description', delimiter=config.meta_delimiter)
+    cfg = extract_cfg(scan, field='description', delimiter_regex=config.field_delimiter_regex)
     if cfg and EMAIL_SECTION in cfg:
         to_value = cfg[EMAIL_SECTION].get('to')
         addresses = to_value and re.findall(email_pattern, to_value)

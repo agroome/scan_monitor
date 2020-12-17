@@ -18,6 +18,7 @@ SRC_DIR=$(dirname "$0")
 
 # create log directory
 /bin/mkdir -p $APP_DIR/var/log
+/usr/bin/touch $APP_DIR/var/log/notify.log
 # install the virtual environment and append 'activate' to .bash_profile
 /usr/bin/python3 -m venv "$APP_DIR"
 /usr/bin/echo "source $APP_DIR/bin/activate" > "$APP_DIR/.bash_profile"
@@ -50,9 +51,11 @@ EOF
 # create ENV_FILE with some defaults and set permissions
 ENV_FILE=$APP_DIR/.monitor_env
 /usr/bin/cat > $ENV_FILE << EOF
-TSC_PORT=445
+TSC_PORT=443
 SMTP_PORT=25
+POLL_INTERVAL=15
 EOF
+/bin/chown -R scan_monitor:scan_monitor $APP_DIR
 /bin/chmod 400 $ENV_FILE
 
 /bin/echo "###                                                                        "
@@ -62,9 +65,6 @@ EOF
 /bin/echo "###                                                                        "
 /bin/echo "###     sudo $APP_DIR/bin/configure                                        "
 /bin/echo "###                                                                        "
-/bin/echo "###  If a password is required smtp, include the --smtp-password flag      "
-/bin/echo "###                                                                        "
-/bin/echo "###     sudo $APP_DIR/bin/configure --smtp-password                        "
 /bin/echo "###                                                                        "
 /bin/echo "###  After completing the configuration, start the monitor with the        "
 /bin/echo "###  following command:                                                    "
