@@ -118,7 +118,8 @@ subject: {{ name }}: {{ status }}
 ```
 
 ### Customize notification template
-The following scan instance variables can be used in the notification templates:
+The following scan instance variables can be used in the notification templates. 
+Templates are located in /opt/scan_monitor/templates.
 ```
 instance_variables = [
     'id', 'name', 'description', 'status', 'initiator', 'owner', 'ownerGroup',
@@ -176,9 +177,9 @@ Import Blocked.
 
 Read about Jinja templates here: [Jinja2 docs](https://jinja2docs.readthedocs.io/)
 
-### Logging
+### Files
  - /opt/scan_monitor/var/log/notify.log
- - /opt/scan_monitor/etc/config.json
+ - /opt/scan_monitor/.monitor_env
 
 ### License
 The project is licensed under the MIT license.
