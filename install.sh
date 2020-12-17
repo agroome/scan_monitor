@@ -19,9 +19,8 @@ SRC_DIR=$(dirname "$0")
 # create log directory
 /bin/mkdir -p $APP_DIR/var/log
 /usr/bin/touch $APP_DIR/var/log/notify.log
-# install the virtual environment and append 'activate' to .bash_profile
+# install the virtual environment
 /usr/bin/python3 -m venv "$APP_DIR"
-/usr/bin/echo "source $APP_DIR/bin/activate" > "$APP_DIR/.bash_profile"
 
 # copy templates
 /bin/cp -r "$SRC_DIR/scan_monitor/templates" "$APP_DIR"

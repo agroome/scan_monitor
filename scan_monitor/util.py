@@ -17,8 +17,9 @@ def extract_cfg(record, field, delimiter_regex, repair_record=True):
     partitions = re.search(regex_str, record.get(field, ''), re.DOTALL)
     if partitions and repair_record:
         record[field] = partitions.groupdict(field)
+        logging.WARNING(f'record[field] = {record[field]}')
+
     config_str = partitions and partitions['config'].strip()
-    logging.debug(f'config_str: {config_str}')
     config_parser = ConfigParser(allow_no_value=True)
     try:
         config_parser.read_string(config_str)
