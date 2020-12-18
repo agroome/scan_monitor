@@ -72,5 +72,5 @@ logging.basicConfig(
     datefmt='%m/%d/%Y %H:%M:%S',
     level=config.log_level)
 
-logging.warning(f'log level: {config.log_level}')
+logging.info(f'log level: {config.log_level}')
 
