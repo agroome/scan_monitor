@@ -69,7 +69,7 @@ def process_instances(scan_instances, saved_state=None):
                 # check completion status in all instances
                 instance = instance_lookup.get(instance_id)
                 if instance is None:  # likely deleted
-                    logging.info(f'item {instance_id} not listed: CONTINUE to next')
+                    logging.debug(f'item {instance_id} not listed: remove from state CONTINUE')
                     continue
                 # no longer running
                 logging.debug('instance no longer running')
@@ -78,7 +78,6 @@ def process_instances(scan_instances, saved_state=None):
                 logging.info(f'{instance_id} IS ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
                 instance = parse_scan_instance(instance)
                 if 'smtp_notification' in instance:
-                    logging.debug('INSTANCE HAS SMTP_NOTIFICATION')
                     smtp = SMTP(instance)
                     smtp.send()
                 else:

@@ -45,20 +45,13 @@ class SMTP:
                 logging.info(f'sending: {self.body}')
                 with smtplib.SMTP(self.server) as s:
                     s.send_message(msg)
-                    # s.quit()
-
-                # with smtplib.SMTP(self.server, self.port) as server:
-                #     server.sendmail(self.from_address, self.to_address, message)
             else:
                 # Create a secure SSL context
-                message = '\n\n'.join([self.subject, self.body])
                 context = ssl.create_default_context()
                 with smtplib.SMTP_SSL(self.server, self.port, context=context) as s:
                     if getattr(self, 'smtp_secret'):
                         s.login(self.from_address, self.smtp_secret)
                     s.send_message(msg)
-
-                    # s.sendmail(self.from_address, self.to_address, message)
         except Exception as e:
             logging.error(e)
 

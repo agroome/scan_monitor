@@ -11,12 +11,15 @@ EMAIL_SECTION = 'email notification'
 
 
 def extract_cfg(record, field, delimiter_regex, repair_record=True):
+    """Extract configParser data after delimeter in field from record."""
+
     # regex that separates the body of the field from the appended 'config'
     regex_str = f'(?P<{field}>.*){delimiter_regex}(?P<config>.*)'
 
     partitions = re.search(regex_str, record.get(field, ''), re.DOTALL)
     if partitions and repair_record:
         record[field] = partitions.groupdict(field)
+        logging.debug(f'FIELD: record[field] ')
 
     config_str = partitions and partitions['config'].strip()
     config_parser = ConfigParser(allow_no_value=True)
@@ -38,7 +41,7 @@ def parse_scan_instance(scan):
         to_value = cfg[EMAIL_SECTION].get('to')
         addresses = to_value and re.findall(email_pattern, to_value)
         if addresses:
-            logging.info(f'sending to: {addresses}')
+            logging.debug(f'found to addresses: {addresses}')
             # add to: addresses to notification info
             scan['smtp_notification'] = dict(to_address=','.join(addresses))
             subject_template = cfg[EMAIL_SECTION].get('subject')
