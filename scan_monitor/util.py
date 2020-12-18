@@ -34,7 +34,7 @@ def extract_cfg(record, field, delimiter_regex, repair_record=True):
 
 
 def parse_scan_instance(scan):
-    """ Parse a scan instance. Inject smtp_notification if found in the scan description. """
+    """ Parse a scan record. Inject smtp_notification field if found in the scan description. """
 
     cfg = extract_cfg(scan, field='description', delimiter_regex=config.field_delimiter_regex)
     if cfg and EMAIL_SECTION in cfg:

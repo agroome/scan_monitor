@@ -8,7 +8,7 @@ setuptools.setup(
     version='0.',
     author='Andy Groome',
     author_email='groome.andy@gmail.com',
-    description='Monitor and scans and notify when status changes',
+    description='Monitor Tenable.sc scans and notify when status changes',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/agroome/scan_monitor',
@@ -29,7 +29,7 @@ setuptools.setup(
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
+        'Operating System :: Ubuntu',
     ],
     python_requires='>=3.6',
 )
