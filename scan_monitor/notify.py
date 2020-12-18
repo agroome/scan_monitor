@@ -34,7 +34,7 @@ class SMTP:
 
     def send(self):
         message = '\n\n'.join([self.subject, self.body])
-        logging.debug(f'sending: {message}')
+        logging.info(f'sending: {message}')
         try:
             if self.port == 25:
                 with smtplib.SMTP(self.server, self.port) as server:
