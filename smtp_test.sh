@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-python3 -m smtpd -c DebuggingServer -n localhost:1025
+python3 -m smtpd -c DebuggingServer -n localhost:25
 

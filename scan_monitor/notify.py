@@ -2,6 +2,7 @@ from jinja2 import Template
 import logging
 import ssl
 import smtplib
+from email.message import EmailMessage
 from scan_monitor import config
 
 
@@ -33,20 +34,31 @@ class SMTP:
         return body
 
     def send(self):
-        message = '\n\n'.join([self.subject, self.body])
-        logging.info(f'sending: {message}')
         try:
+            msg = EmailMessage()
+            msg.set_content(self.body)
+            msg['Subject'] = self.subject
+            msg['From'] = self.from_address
+            msg['To'] = self.to_address
+
             if self.port == 25:
-                logging.info('SENDING')
-                with smtplib.SMTP(self.server, self.port) as server:
-                    server.sendmail(self.from_address, self.to_address, message)
+                logging.info(f'sending: {self.body}')
+                with smtplib.SMTP(self.server) as s:
+                    s.send_message(msg)
+                    # s.quit()
+
+                # with smtplib.SMTP(self.server, self.port) as server:
+                #     server.sendmail(self.from_address, self.to_address, message)
             else:
                 # Create a secure SSL context
+                message = '\n\n'.join([self.subject, self.body])
                 context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(self.server, self.port, context=context) as server:
+                with smtplib.SMTP_SSL(self.server, self.port, context=context) as s:
                     if getattr(self, 'smtp_secret'):
-                        server.login(self.from_address, self.smtp_secret)
-                    server.sendmail(self.from_address, self.to_address, message)
+                        s.login(self.from_address, self.smtp_secret)
+                    s.send_message(msg)
+
+                    # s.sendmail(self.from_address, self.to_address, message)
         except Exception as e:
             logging.error(e)
 
