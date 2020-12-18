@@ -37,6 +37,7 @@ class SMTP:
         logging.info(f'sending: {message}')
         try:
             if self.port == 25:
+                logging.info('SENDING')
                 with smtplib.SMTP(self.server, self.port) as server:
                     server.sendmail(self.from_address, self.to_address, message)
             else:

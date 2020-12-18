@@ -72,7 +72,7 @@ def process_instances(scan_instances, saved_state=None):
                     logging.info(f'item {instance_id} not listed: CONTINUE to next')
                     continue
                 # no longer running
-                logging.info('instance no longer running')
+                logging.debug('instance no longer running')
 
             if instance['status'] != saved_instance['status'] and instance['status'] in notification_states:
                 logging.info(f'{instance_id} IS ELIGIBLE {saved_instance["status"]} ==> {instance["status"]}')
@@ -89,11 +89,10 @@ def process_instances(scan_instances, saved_state=None):
         # next send notifications for new instances that are not yet in saved_state
         for instance_id in set(running_instances) - set(saved_state):
             instance = running_instances[instance_id]
-            logging.debug(f'processing new instance status: {instance["status"]}')
             if instance['status'] in notification_states:
                 instance = parse_scan_instance(instance)
                 if 'smtp_notification' in instance:
-                    logging.debug('INSTANCE HAS SMTP_NOTIFICATION')
+                    logging.debug('SEND NOTIFICATION')
                     # first time we have seen this one, save the state and notify
                     smtp = SMTP(instance)
                     smtp.send()

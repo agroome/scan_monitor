@@ -22,13 +22,6 @@ json_file = app_dir / 'etc' / 'config.json'
 state_file = app_dir / 'state.json'
 template_dir = app_dir / 'templates'
 
-logging.basicConfig(
-    filename=logfile,
-    filemode='a',
-    format='%(asctime)s %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S',
-    level=logging.WARNING)
-
 load_dotenv(dotenv_path=env_file)
 
 
@@ -46,6 +39,7 @@ class Config:
     smtp_port = int(os.getenv('SMTP_PORT', DEFAULT_SMTP_PORT))
     smtp_from = os.getenv('SMTP_FROM')
     smtp_secret = os.getenv('SMTP_PASSWORD')
+    log_level = int(os.getenv('LOG_LEVEL', logging.WARNING))
     field_delimiter_regex = DEFAULT_DELIMITER_REGEX
 
     def __init__(self, json_config=None):
@@ -70,3 +64,13 @@ class Config:
 
 
 config = Config()
+
+logging.basicConfig(
+    filename=logfile,
+    filemode='a',
+    format='%(asctime)s %(message)s',
+    datefmt='%m/%d/%Y %H:%M:%S',
+    level=config.log_level)
+
+logging.warning(f'log level: {config.log_level}')
+
